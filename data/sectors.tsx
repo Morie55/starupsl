@@ -1,0 +1,15 @@
+export const sectorsData = [
+  { title: "Technology", color: "bg-blue-500" },
+  { title: "Healthcare", color: "bg-green-500" },
+  { title: "Fashion", color: "bg-amber-500" },
+  { title: "Finance", color: "bg-purple-500" },
+  { title: "Education", color: "bg-amber-500" },
+  { title: "Agriculture", color: "bg-emerald-500" },
+  { title: "Energy", color: "bg-red-500" },
+  { title: "Retail", color: "bg-indigo-500" },
+  { title: "Transportation", color: "bg-orange-500" },
+  { title: "Manufacturing", color: "bg-cyan-500" },
+  { title: "Media", color: "bg-pink-500" },
+  { title: "Real Estate", color: "bg-lime-500" },
+  { title: "Tourism", color: "bg-teal-500" },
+];
