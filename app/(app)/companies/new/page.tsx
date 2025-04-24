@@ -52,7 +52,7 @@ export default function NewCompanyPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-3xl">
+    <div className="px-4 py-6 lg:px-8 lg:py-10 mx-auto">
       {/* Back button */}
       <div className="mb-6">
         <Link

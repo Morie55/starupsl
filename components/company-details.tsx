@@ -29,7 +29,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
-import CompanyRounds from "./CompanyRounds";
+import CompanyRounds from "./companyRounds";
 
 // This would typically come from an API or database
 const companyData = {

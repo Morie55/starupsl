@@ -29,3 +29,12 @@ export const fundingStatus = [
   "Public",
   "Acquired",
 ];
+
+export const investmentTypes = [
+  "Venture Capital",
+  "Angel Investor",
+  "Private Equity",
+  "Corporate Investor",
+  "Family Office",
+  "Accelerator/Incubator",
+];

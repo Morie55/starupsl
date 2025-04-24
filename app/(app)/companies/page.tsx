@@ -462,6 +462,20 @@ export default function CompaniesPage() {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto"
+                  >
+                    <Link
+                      href="/companies/new"
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Company
+                    </Link>
+                  </Button>
+                  <Button
                     variant="outline"
                     size="sm"
                     className="w-full sm:w-auto"

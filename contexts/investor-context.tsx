@@ -68,10 +68,7 @@ export function InvestorProvider({ children }: { children: ReactNode }) {
         const result = await createInvestor(data);
 
         if (result.success && result.investor) {
-          // Optionally update the local state if needed
-          setInvestors((prev) => [result.investor!, ...prev]);
-          setTotalInvestors((prev) => prev + 1);
-          return { success: true, investor: result.investor };
+          return { success: true, investorId: result.investor._id };
         } else {
           setError(result.error || "Failed to create investor");
           return { success: false, error: result.error };

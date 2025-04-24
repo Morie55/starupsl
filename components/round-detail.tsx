@@ -86,7 +86,7 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
 
   if (!round) {
     return (
-      <div className="container max-w-5xl py-8">
+      <div className=" py-8">
         <Card>
           <CardContent className="pt-6">
             <p>
@@ -105,7 +105,7 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
   const progressPercentage = 0;
 
   return (
-    <div className="container max-w-5xl py-8">
+    <div className="p-4 py-8">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
@@ -122,11 +122,13 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
           <Button variant="outline" size="sm" asChild>
             <Link href="/rounds">Back to Rounds</Link>
           </Button>
+          {/* {round.userId === user?.id || user?.publicMetadata?.isAdmin  ?"":""} */}
           <Button variant="outline" size="icon" asChild>
             <Link href={`/round/${round?._id}/edit`}>
               <Edit className="h-4 w-4" />
             </Link>
           </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon">
@@ -146,6 +148,7 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
               <DropdownMenuItem>Copy Link</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
           <AlertDialog
             open={showDeleteDialog}
             onOpenChange={setShowDeleteDialog}

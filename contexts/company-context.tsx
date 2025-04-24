@@ -62,7 +62,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
       try {
         const result = await createCompany(data);
-        console.log("result", result);
+
         if (result.success && result.company) {
           return { success: true, companyId: result.company._id };
         } else {

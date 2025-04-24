@@ -10,13 +10,14 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 export async function createCompany(data: any) {
   try {
     await connect();
-    const newCompany = await new Company(data);
-    const company = await newCompany.save();
     const { userId } = await auth();
 
     if (!userId) {
       return { message: "No Logged In User" };
     }
+
+    const newCompany = await new Company(data);
+    const company = await newCompany.save();
 
     const client = await clerkClient();
     await client.users.updateUserMetadata(userId, {
@@ -24,6 +25,7 @@ export async function createCompany(data: any) {
         onboardingCompleted: true,
         companyId: company._id,
         companyName: company.name,
+        role: "company",
       },
     });
 

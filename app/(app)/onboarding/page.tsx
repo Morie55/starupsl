@@ -50,6 +50,7 @@ import {
   companyStages,
   companyTypes,
   fundingStatus,
+  investmentTypes,
 } from "@/data";
 import { useUser } from "@clerk/nextjs";
 
@@ -355,7 +356,7 @@ export default function OnboardingPage() {
           ...data,
           userId: user?.id,
         });
-        console.log(result);
+
         if (result.success) {
           router.push(`/companies/${result.companyId}`);
         } else {
@@ -370,17 +371,13 @@ export default function OnboardingPage() {
         data.sectorInterested = selectedSectors;
 
         // Add investor using context
-        const result = await addInvestor({
+        const result: any = await addInvestor({
           ...data,
-          userId: "user_123", // In a real app, this would come from auth
+          userId: user?.id,
         });
 
         if (result.success) {
-          toast({
-            title: "Success",
-            description: "Investor profile created successfully!",
-          });
-          router.push("/dashboard");
+          router.push(`/investors/${result.investorId}`);
         } else {
           toast({
             title: "Error",
@@ -499,11 +496,11 @@ export default function OnboardingPage() {
   const isLoading = companyLoading || investorLoading;
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="mx-auto max-w-3xl">
+    <div className=" py-10">
+      <div className="p-4 sm:p-6 lg:p-8">
         {step === 0 ? (
           // Entity Type Selection
-          <Card>
+          <Card className="border-none shadow-none">
             <CardHeader>
               <CardTitle>Select Your Entity Type</CardTitle>
               <CardDescription>
@@ -1134,25 +1131,11 @@ export default function OnboardingPage() {
                                 <SelectValue placeholder="Select your investor type" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="venture_capital">
-                                  Venture Capital
-                                </SelectItem>
-                                <SelectItem value="angel_investor">
-                                  Angel Investor
-                                </SelectItem>
-                                <SelectItem value="private_equity">
-                                  Private Equity
-                                </SelectItem>
-                                <SelectItem value="corporate_investor">
-                                  Corporate Investor
-                                </SelectItem>
-                                <SelectItem value="family_office">
-                                  Family Office
-                                </SelectItem>
-                                <SelectItem value="accelerator">
-                                  Accelerator/Incubator
-                                </SelectItem>
-                                <SelectItem value="other">Other</SelectItem>
+                                {investmentTypes.map((type) => (
+                                  <SelectItem key={type} value={type}>
+                                    {type}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </div>
@@ -1163,34 +1146,25 @@ export default function OnboardingPage() {
                               <span className="text-red-500">*</span>
                             </Label>
                             <div className="grid grid-cols-2 gap-2">
-                              {[
-                                "technology",
-                                "healthcare",
-                                "finance",
-                                "education",
-                                "retail",
-                                "manufacturing",
-                                "energy",
-                                "real_estate",
-                                "food",
-                                "transportation",
-                                "media",
-                                "other",
-                              ].map((sector) => (
+                              {sectorsData.map((sector) => (
                                 <div
-                                  key={sector}
+                                  key={sector.title}
                                   className="flex items-center space-x-2"
                                 >
                                   <Checkbox
                                     id={`sector-${sector}`}
-                                    checked={selectedSectors.includes(sector)}
-                                    onCheckedChange={() => toggleSector(sector)}
+                                    checked={selectedSectors.includes(
+                                      sector.title
+                                    )}
+                                    onCheckedChange={() =>
+                                      toggleSector(sector.title)
+                                    }
                                   />
                                   <Label
                                     htmlFor={`sector-${sector}`}
                                     className="font-normal capitalize"
                                   >
-                                    {sector.replace("_", " ")}
+                                    {sector.title.replace("_", " ")}
                                   </Label>
                                 </div>
                               ))}
@@ -1441,23 +1415,11 @@ export default function OnboardingPage() {
                                 <SelectValue placeholder="Select preferred investment stage" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="pre_seed">
-                                  Pre-Seed
-                                </SelectItem>
-                                <SelectItem value="seed">Seed</SelectItem>
-                                <SelectItem value="series_a">
-                                  Series A
-                                </SelectItem>
-                                <SelectItem value="series_b">
-                                  Series B
-                                </SelectItem>
-                                <SelectItem value="series_c_plus">
-                                  Series C+
-                                </SelectItem>
-                                <SelectItem value="growth">Growth</SelectItem>
-                                <SelectItem value="all_stages">
-                                  All Stages
-                                </SelectItem>
+                                {fundingStatus.map((status) => (
+                                  <SelectItem key={status} value={status}>
+                                    {status}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </div>

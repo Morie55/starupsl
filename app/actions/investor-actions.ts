@@ -1,33 +1,33 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import {
-  addInvestor,
-  updateInvestor,
-  getAllInvestors,
-  getInvestorById,
-  deleteInvestor,
-  type Investor,
-} from "@/lib/db-simulation";
+
+import { auth, clerkClient } from "@clerk/nextjs/server";
+import Investor from "@/models/Investor";
 
 // Add a new investor
-export async function createInvestor(
-  data: Omit<Investor, "id" | "createdAt" | "updatedAt">
-) {
+export async function createInvestor(data: any) {
   try {
-    // In a real app, you would get the userId from the session
-    const userId = data.userId || "user_123";
+    const { userId } = await auth();
 
-    // Create the investor
-    const investor = await addInvestor({
-      ...data,
-      userId,
+    if (!userId) {
+      return { message: "No Logged In User" };
+    }
+
+    const newInvestor = await new Investor(data);
+    const investor = await newInvestor.save();
+
+    const client = await clerkClient();
+    await client.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        onboardingCompleted: true,
+        companyId: investor._id,
+        companyName: investor.name,
+        role: "investor",
+      },
     });
 
-    // Revalidate the investors list page
-    revalidatePath("/investors");
-
-    return { success: true, investor };
+    return JSON.parse(JSON.stringify({ success: true, investor }));
   } catch (error) {
     console.error("Error creating investor:", error);
     return { success: false, error: "Failed to create investor" };
