@@ -203,6 +203,12 @@ export default function RoundsTable() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button asChild>
+              <Link href="/rounds/new">
+                <Plus className="h-4 w-4 mr-2" />
+                New Round
+              </Link>
+            </Button>
             <Button variant="outline">
               <Download className="h-4 w-4 mr-2" />
               Export
