@@ -40,16 +40,51 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FundingRoundsPage } from "@/components/funding-rounds-page";
 import RoundsTable from "@/components/rounds-table";
 
-export default function CompanyDetailsPage({ company }: any) {
+// Sample company data based on the Mongoose schema
+const companies = [
+  {
+    _id: "1",
+    userId: "user1",
+    name: "TechNova Solutions",
+    sector: "Technology",
+    location: "San Francisco, USA",
+    foundedAt: "2018",
+    logo: "/placeholder.svg?height=80&width=80",
+    registrationNumber: "TN12345678",
+    type: "Corporation",
+    email: "contact@technova.example",
+    phone: "+1 (555) 123-4567",
+    address: "123 Innovation Drive, San Francisco, CA 94105",
+    socialLinks: [
+      { name: "LinkedIn", link: "https://linkedin.com/company/technova" },
+      { name: "Twitter", link: "https://twitter.com/technova" },
+    ],
+    website: "https://technova.example",
+    stage: "Growth",
+    description:
+      "TechNova develops cutting-edge AI solutions for enterprise clients. Our platform leverages machine learning and natural language processing to automate complex business processes and extract valuable insights from unstructured data. We specialize in custom AI implementations that integrate seamlessly with existing enterprise systems.",
+    missionStatement:
+      "Transforming businesses through innovative AI technology.",
+    fundingStatus: "Series A",
+    amountRaised: 5000000,
+    fundingNeeded: 10000000,
+    foundingDocuments: "https://example.com/founding-docs",
+    pitchDeck: "https://example.com/pitch-deck",
+    employeesRange: "11-50",
+    createdAt: "2023-01-15T00:00:00.000Z",
+    updatedAt: "2023-11-20T00:00:00.000Z",
+  },
+];
+
+export default function CompanyDetailsPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   const [activeTab, setActiveTab] = useState("overview");
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase();
-  };
+  // Find company by ID from the params
+  const company = companies.find((c) => c._id === params.id) || companies[0];
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -404,7 +439,7 @@ export default function CompanyDetailsPage({ company }: any) {
                 <div className="space-y-4">
                   <h3 className="font-semibold">Social Media</h3>
                   <div className="space-y-3">
-                    {company.socialLinks.map((social: any, index: any) => (
+                    {company.socialLinks.map((social, index) => (
                       <div key={index} className="flex items-start">
                         <Globe className="h-5 w-5 text-muted-foreground mr-3 mt-0.5" />
                         <div>

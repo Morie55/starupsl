@@ -39,6 +39,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FundingRoundsPage } from "@/components/funding-rounds-page";
 import RoundsTable from "@/components/rounds-table";
+import CompanyDetailsPage from "@/components/company-details";
 
 // Sample company data based on the Mongoose schema
 const companies = [
@@ -49,7 +50,7 @@ const companies = [
     sector: "Technology",
     location: "San Francisco, USA",
     foundedAt: "2018",
-    logo: "/placeholder.svg?height=80&width=80",
+    logo: "/placeholder.svg?height=40&width=40",
     registrationNumber: "TN12345678",
     type: "Corporation",
     email: "contact@technova.example",
@@ -62,409 +63,296 @@ const companies = [
     website: "https://technova.example",
     stage: "Growth",
     description:
-      "TechNova develops cutting-edge AI solutions for enterprise clients. Our platform leverages machine learning and natural language processing to automate complex business processes and extract valuable insights from unstructured data. We specialize in custom AI implementations that integrate seamlessly with existing enterprise systems.",
+      "TechNova develops cutting-edge AI solutions for enterprise clients.",
     missionStatement:
       "Transforming businesses through innovative AI technology.",
     fundingStatus: "Series A",
     amountRaised: 5000000,
     fundingNeeded: 10000000,
-    foundingDocuments: "https://example.com/founding-docs",
-    pitchDeck: "https://example.com/pitch-deck",
     employeesRange: "11-50",
     createdAt: "2023-01-15T00:00:00.000Z",
     updatedAt: "2023-11-20T00:00:00.000Z",
   },
+  {
+    _id: "2",
+    userId: "user1",
+    name: "GreenEarth Renewables",
+    sector: "Clean Energy",
+    location: "Berlin, Germany",
+    foundedAt: "2015",
+    logo: "/placeholder.svg?height=40&width=40",
+    registrationNumber: "GE87654321",
+    type: "LLC",
+    email: "info@greenearth.example",
+    phone: "+49 30 12345678",
+    address: "Friedrichstraße 123, 10117 Berlin, Germany",
+    socialLinks: [
+      { name: "LinkedIn", link: "https://linkedin.com/company/greenearth" },
+      { name: "Instagram", link: "https://instagram.com/greenearth" },
+    ],
+    website: "https://greenearth.example",
+    stage: "Expansion",
+    description:
+      "GreenEarth develops sustainable energy solutions for residential and commercial applications.",
+    missionStatement:
+      "Accelerating the world's transition to sustainable energy.",
+    fundingStatus: "Series B",
+    amountRaised: 12000000,
+    fundingNeeded: 20000000,
+    employeesRange: "51-200",
+    createdAt: "2022-05-10T00:00:00.000Z",
+    updatedAt: "2023-10-15T00:00:00.000Z",
+  },
+  {
+    _id: "3",
+    userId: "user2",
+    name: "MediLife Sciences",
+    sector: "Healthcare",
+    location: "Boston, USA",
+    foundedAt: "2019",
+    logo: "/placeholder.svg?height=40&width=40",
+    registrationNumber: "ML98765432",
+    type: "Corporation",
+    email: "contact@medilife.example",
+    phone: "+1 (617) 987-6543",
+    address: "456 Medical Parkway, Boston, MA 02115",
+    socialLinks: [
+      { name: "LinkedIn", link: "https://linkedin.com/company/medilife" },
+      { name: "Facebook", link: "https://facebook.com/medilife" },
+    ],
+    website: "https://medilife.example",
+    stage: "Early Stage",
+    description:
+      "MediLife develops innovative medical devices and diagnostic tools.",
+    missionStatement: "Improving patient outcomes through medical innovation.",
+    fundingStatus: "Seed",
+    amountRaised: 1500000,
+    fundingNeeded: 5000000,
+    employeesRange: "1-10",
+    createdAt: "2023-03-22T00:00:00.000Z",
+    updatedAt: "2023-09-05T00:00:00.000Z",
+  },
+  {
+    _id: "4",
+    userId: "user2",
+    name: "FinEdge Technologies",
+    sector: "Fintech",
+    location: "London, UK",
+    foundedAt: "2017",
+    logo: "/placeholder.svg?height=40&width=40",
+    registrationNumber: "FE56789012",
+    type: "Limited Company",
+    email: "info@finedge.example",
+    phone: "+44 20 7946 0987",
+    address: "78 Finsbury Square, London EC2A 1HP",
+    socialLinks: [
+      { name: "LinkedIn", link: "https://linkedin.com/company/finedge" },
+      { name: "Twitter", link: "https://twitter.com/finedge" },
+    ],
+    website: "https://finedge.example",
+    stage: "Growth",
+    description:
+      "FinEdge provides blockchain-based payment solutions for global businesses.",
+    missionStatement:
+      "Making financial transactions secure, fast, and accessible worldwide.",
+    fundingStatus: "Series A",
+    amountRaised: 7500000,
+    fundingNeeded: 15000000,
+    employeesRange: "11-50",
+    createdAt: "2022-11-08T00:00:00.000Z",
+    updatedAt: "2023-08-17T00:00:00.000Z",
+  },
+  {
+    _id: "5",
+    userId: "user3",
+    name: "EduSpark Learning",
+    sector: "Education",
+    location: "Singapore",
+    foundedAt: "2020",
+    logo: "/placeholder.svg?height=40&width=40",
+    registrationNumber: "ES34567890",
+    type: "Private Limited",
+    email: "hello@eduspark.example",
+    phone: "+65 6123 4567",
+    address: "123 Education Road, Singapore 123456",
+    socialLinks: [
+      { name: "LinkedIn", link: "https://linkedin.com/company/eduspark" },
+      { name: "YouTube", link: "https://youtube.com/eduspark" },
+    ],
+    website: "https://eduspark.example",
+    stage: "Early Stage",
+    description:
+      "EduSpark develops interactive learning platforms for K-12 students.",
+    missionStatement: "Making quality education accessible to every child.",
+    fundingStatus: "Pre-seed",
+    amountRaised: 500000,
+    fundingNeeded: 2000000,
+    employeesRange: "1-10",
+    createdAt: "2023-02-14T00:00:00.000Z",
+    updatedAt: "2023-07-30T00:00:00.000Z",
+  },
+  {
+    _id: "6",
+    userId: "user3",
+    name: "AgriTech Innovations",
+    sector: "Agriculture",
+    location: "Nairobi, Kenya",
+    foundedAt: "2016",
+    logo: "/placeholder.svg?height=40&width=40",
+    registrationNumber: "AT23456789",
+    type: "Limited Company",
+    email: "info@agritech.example",
+    phone: "+254 20 1234567",
+    address: "45 Farming Avenue, Nairobi, Kenya",
+    socialLinks: [
+      { name: "LinkedIn", link: "https://linkedin.com/company/agritech" },
+      { name: "Facebook", link: "https://facebook.com/agritech" },
+    ],
+    website: "https://agritech.example",
+    stage: "Expansion",
+    description:
+      "AgriTech develops IoT solutions for precision farming in Africa.",
+    missionStatement:
+      "Empowering farmers with technology for sustainable agriculture.",
+    fundingStatus: "Series B",
+    amountRaised: 8000000,
+    fundingNeeded: 12000000,
+    employeesRange: "51-200",
+    createdAt: "2022-08-05T00:00:00.000Z",
+    updatedAt: "2023-06-22T00:00:00.000Z",
+  },
+  {
+    _id: "7",
+    userId: "user4",
+    name: "UrbanMobility",
+    sector: "Transportation",
+    location: "Amsterdam, Netherlands",
+    foundedAt: "2018",
+    logo: "/placeholder.svg?height=40&width=40",
+    registrationNumber: "UM45678901",
+    type: "B.V.",
+    email: "contact@urbanmobility.example",
+    phone: "+31 20 123 4567",
+    address: "78 Transit Street, Amsterdam, Netherlands",
+    socialLinks: [
+      { name: "LinkedIn", link: "https://linkedin.com/company/urbanmobility" },
+      { name: "Instagram", link: "https://instagram.com/urbanmobility" },
+    ],
+    website: "https://urbanmobility.example",
+    stage: "Growth",
+    description:
+      "UrbanMobility develops electric scooter sharing platforms for European cities.",
+    missionStatement: "Creating sustainable urban transportation solutions.",
+    fundingStatus: "Series A",
+    amountRaised: 6500000,
+    fundingNeeded: 10000000,
+    employeesRange: "11-50",
+    createdAt: "2022-09-18T00:00:00.000Z",
+    updatedAt: "2023-05-12T00:00:00.000Z",
+  },
+  {
+    _id: "8",
+    userId: "user4",
+    name: "CyberShield Security",
+    sector: "Cybersecurity",
+    location: "Tel Aviv, Israel",
+    foundedAt: "2017",
+    logo: "/placeholder.svg?height=40&width=40",
+    registrationNumber: "CS67890123",
+    type: "Ltd.",
+    email: "info@cybershield.example",
+    phone: "+972 3 123 4567",
+    address: "56 Security Blvd, Tel Aviv, Israel",
+    socialLinks: [
+      { name: "LinkedIn", link: "https://linkedin.com/company/cybershield" },
+      { name: "Twitter", link: "https://twitter.com/cybershield" },
+    ],
+    website: "https://cybershield.example",
+    stage: "Expansion",
+    description:
+      "CyberShield develops advanced threat detection and prevention solutions.",
+    missionStatement:
+      "Protecting digital assets in an increasingly connected world.",
+    fundingStatus: "Series B",
+    amountRaised: 15000000,
+    fundingNeeded: 25000000,
+    employeesRange: "51-200",
+    createdAt: "2022-07-14T00:00:00.000Z",
+    updatedAt: "2023-04-28T00:00:00.000Z",
+  },
+  {
+    _id: "9",
+    userId: "user5",
+    name: "FoodConnect",
+    sector: "Food & Beverage",
+    location: "Toronto, Canada",
+    foundedAt: "2019",
+    logo: "/placeholder.svg?height=40&width=40",
+    registrationNumber: "FC78901234",
+    type: "Corporation",
+    email: "hello@foodconnect.example",
+    phone: "+1 (416) 123-4567",
+    address: "123 Culinary Street, Toronto, ON M5V 2K4",
+    socialLinks: [
+      { name: "LinkedIn", link: "https://linkedin.com/company/foodconnect" },
+      { name: "Instagram", link: "https://instagram.com/foodconnect" },
+    ],
+    website: "https://foodconnect.example",
+    stage: "Early Stage",
+    description:
+      "FoodConnect develops a platform connecting local food producers with consumers.",
+    missionStatement: "Building sustainable local food ecosystems.",
+    fundingStatus: "Seed",
+    amountRaised: 2000000,
+    fundingNeeded: 5000000,
+    employeesRange: "11-50",
+    createdAt: "2023-01-05T00:00:00.000Z",
+    updatedAt: "2023-03-18T00:00:00.000Z",
+  },
+  {
+    _id: "10",
+    userId: "user5",
+    name: "RetailAI",
+    sector: "Retail",
+    location: "Tokyo, Japan",
+    foundedAt: "2018",
+    logo: "/placeholder.svg?height=40&width=40",
+    registrationNumber: "RA89012345",
+    type: "KK",
+    email: "info@retailai.example",
+    phone: "+81 3 1234 5678",
+    address: "45 Shopping Avenue, Shibuya, Tokyo, Japan",
+    socialLinks: [
+      { name: "LinkedIn", link: "https://linkedin.com/company/retailai" },
+      { name: "Twitter", link: "https://twitter.com/retailai" },
+    ],
+    website: "https://retailai.example",
+    stage: "Growth",
+    description:
+      "RetailAI develops AI-powered inventory management and customer analytics for retailers.",
+    missionStatement: "Revolutionizing retail through artificial intelligence.",
+    fundingStatus: "Series A",
+    amountRaised: 9000000,
+    fundingNeeded: 15000000,
+    employeesRange: "11-50",
+    createdAt: "2022-06-30T00:00:00.000Z",
+    updatedAt: "2023-02-15T00:00:00.000Z",
+  },
 ];
 
-export default function CompanyDetailsPage({
+export default async function CompanyDetail({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const [activeTab, setActiveTab] = useState("overview");
-
+  const { id } = await params;
   // Find company by ID from the params
-  const company = companies.find((c) => c._id === params.id) || companies[0];
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  // Format date string to readable format
-  const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
+  const company = companies.find((c) => c._id === id) || companies[0];
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl">
-      {/* Back button and actions */}
-      <div className="flex items-center justify-between mb-6">
-        <Link
-          href="/companies"
-          className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Companies
-        </Link>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Share2 className="mr-2 h-4 w-4" />
-            Share
-          </Button>
-          <Link href="/companies/id/edit">
-            <Button variant="outline" size="sm">
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Button>
-          </Link>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">More options</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Export as PDF</DropdownMenuItem>
-              <DropdownMenuItem>Print details</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
-                Delete company
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      {/* Company header */}
-      <div className="flex flex-col md:flex-row gap-6 items-start mb-8">
-        <div className="flex-shrink-0">
-          <div className="relative h-20 w-20 rounded-lg overflow-hidden border bg-background">
-            <Image
-              src={company.logo || "/placeholder.svg"}
-              alt={`${company.name} logo`}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 80px, 80px"
-            />
-          </div>
-        </div>
-        <div className="flex-grow">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold">{company.name}</h1>
-                <Badge variant="outline" className="font-normal">
-                  {company.stage}
-                </Badge>
-              </div>
-              <p className="text-muted-foreground mt-1">
-                {company.missionStatement}
-              </p>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="flex items-center">
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-                <span className="ml-1">{company.sector}</span>
-              </div>
-              <span className="text-muted-foreground mx-2">•</span>
-              <div className="flex items-center">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span className="ml-1">{company.location}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Key metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Founded</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{company.foundedAt}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Funding Status</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              <div className="text-2xl font-bold">{company.fundingStatus}</div>
-              <Badge className="ml-2 bg-green-100 text-green-800">
-                {formatCurrency(company.amountRaised)}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Funding Needed</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(company.fundingNeeded)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Team Size</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{company.employeesRange}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabs and content */}
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="space-y-4"
-      >
-        <TabsList className="bg-background border">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="funding">Funding</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="contact">Contact</TabsTrigger>
-        </TabsList>
-
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Company Profile</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="whitespace-pre-line">{company.description}</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Industry</span>
-                  <span className="font-medium">{company.sector}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Company Type</span>
-                  <span className="font-medium">{company.type}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Founded</span>
-                  <span className="font-medium">{company.foundedAt}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">
-                    Registration Number
-                  </span>
-                  <span className="font-medium">
-                    {company.registrationNumber}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Location</span>
-                  <span className="font-medium">{company.location}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Team Size</span>
-                  <span className="font-medium">{company.employeesRange}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Mission Statement</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <blockquote className="border-l-4 pl-4 italic">
-                "{company.missionStatement}"
-              </blockquote>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Funding Tab */}
-        <TabsContent value="funding" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Funding Overview</CardTitle>
-              <CardDescription>
-                Current funding status and requirements
-              </CardDescription>
-            </CardHeader>
-            <RoundsTable />
-            <CardFooter>
-              <Button className="w-full">Contact for Investment</Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        {/* Documents Tab */}
-        <TabsContent value="documents" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Company Documents</CardTitle>
-              <CardDescription>
-                Important documents and resources
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center">
-                    <FileText className="h-5 w-5 text-muted-foreground mr-3" />
-                    <div>
-                      <h3 className="font-medium">Founding Documents</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Legal incorporation documents
-                      </p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm" asChild>
-                    <a
-                      href={company.foundingDocuments}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Download
-                    </a>
-                  </Button>
-                </div>
-
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center">
-                    <FileText className="h-5 w-5 text-muted-foreground mr-3" />
-                    <div>
-                      <h3 className="font-medium">Pitch Deck</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Company presentation for investors
-                      </p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm" asChild>
-                    <a
-                      href={company.pitchDeck}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Download
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full">
-                Upload New Document
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        {/* Contact Tab */}
-        <TabsContent value="contact" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Company Contact</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-start">
-                      <Mail className="h-5 w-5 text-muted-foreground mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Email</p>
-                        <a
-                          href={`mailto:${company.email}`}
-                          className="font-medium text-primary"
-                        >
-                          {company.email}
-                        </a>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <Phone className="h-5 w-5 text-muted-foreground mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Phone</p>
-                        <a
-                          href={`tel:${company.phone}`}
-                          className="font-medium"
-                        >
-                          {company.phone}
-                        </a>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <MapPin className="h-5 w-5 text-muted-foreground mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Address</p>
-                        <p className="font-medium">{company.address}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <Globe className="h-5 w-5 text-muted-foreground mr-3 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Website</p>
-                        <a
-                          href={company.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-medium text-primary flex items-center"
-                        >
-                          {company.website.replace("https://", "")}
-                          <ExternalLink className="ml-1 h-3 w-3" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Social Media</h3>
-                  <div className="space-y-3">
-                    {company.socialLinks.map((social, index) => (
-                      <div key={index} className="flex items-start">
-                        <Globe className="h-5 w-5 text-muted-foreground mr-3 mt-0.5" />
-                        <div>
-                          <p className="text-sm text-muted-foreground">
-                            {social.name}
-                          </p>
-                          <a
-                            href={social.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-medium text-primary flex items-center"
-                          >
-                            {social.link.replace("https://", "")}
-                            <ExternalLink className="ml-1 h-3 w-3" />
-                          </a>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+    <div className="">
+      <CompanyDetailsPage company={company} />
     </div>
   );
 }

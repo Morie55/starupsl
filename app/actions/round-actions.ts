@@ -41,10 +41,14 @@ export async function createRound(data: RoundFormData): Promise<IRound> {
 export async function getAllRounds(): Promise<IRound[]> {
   try {
     await connectDB();
+
     const rounds: any = await Round.find({}).sort({ createdAt: -1 });
+
     const roundDatas = JSON.parse(JSON.stringify(rounds));
-    const companyIds: any = rounds.map((round: any) => round.companyId);
-    const companies = await Company.find({ _id: { $in: companyIds } });
+    const companies = await Company.find();
+    // const companyIds: any = rounds.map((round: any) => round.companyId);
+    // const companies = await Company.find({ _id: { $in: companyIds } });
+
     const companyMap = companies.reduce((acc: any, company: any) => {
       acc[company._id] = company.name;
       return acc;
