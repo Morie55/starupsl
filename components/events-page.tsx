@@ -2,7 +2,6 @@
 
 import { Calendar, Filter, MapPin, Plus, Search, Users } from "lucide-react";
 
-import { AppLayout } from "@/components/app-layout";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -91,12 +90,12 @@ export function EventsPage() {
             Connect with the startup community
           </p>
         </div>
-        {/* <div className="flex items-center gap-2">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Event
-            </Button>
-          </div> */}
+        <div className="flex items-center gap-2">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Event
+          </Button>
+        </div>
       </div>
 
       <Card>

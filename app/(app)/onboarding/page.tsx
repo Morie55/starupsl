@@ -133,13 +133,6 @@ const investorFormSchema = z.object({
   goalExpected: z.string().optional(),
 });
 
-// Government form schema (placeholder)
-const governmentFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  type: z.string().optional(),
-  // Add more fields as needed
-});
-
 // NGO form schema (placeholder)
 const ngoFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -150,7 +143,6 @@ const ngoFormSchema = z.object({
 type EntityType = z.infer<typeof entityTypeSchema>["entityType"];
 type CompanyFormData = z.infer<typeof companyFormSchema>;
 type InvestorFormData = z.infer<typeof investorFormSchema>;
-type GovernmentFormData = z.infer<typeof governmentFormSchema>;
 type NGOFormData = z.infer<typeof ngoFormSchema>;
 
 export default function OnboardingPage() {
@@ -214,15 +206,6 @@ export default function OnboardingPage() {
       businessRegistrationDocuments: "",
       profileDocuments: "",
       goalExpected: "",
-    },
-  });
-
-  // Government form (placeholder)
-  const governmentForm = useForm<GovernmentFormData>({
-    resolver: zodResolver(governmentFormSchema),
-    defaultValues: {
-      name: "",
-      type: "",
     },
   });
 
@@ -410,8 +393,6 @@ export default function OnboardingPage() {
         return companyForm;
       case "investor":
         return investorForm;
-      case "government":
-        return governmentForm;
       case "ngo":
         return ngoForm;
       default:
@@ -437,14 +418,6 @@ export default function OnboardingPage() {
         : step === 3
         ? "Investment Details"
         : "Documents & Additional Info";
-    } else if (entityType === "government") {
-      return step === 1
-        ? "Basic Information"
-        : step === 2
-        ? "Contact Information"
-        : step === 3
-        ? "Government Details"
-        : "Additional Information";
     } else {
       return step === 1
         ? "Basic Information"
@@ -474,14 +447,6 @@ export default function OnboardingPage() {
         : step === 3
         ? "Tell us more about your investment preferences"
         : "Share additional documents and information";
-    } else if (entityType === "government") {
-      return step === 1
-        ? "Let's start with the essentials about your government entity"
-        : step === 2
-        ? "How can people reach your office?"
-        : step === 3
-        ? "Tell us more about your government entity"
-        : "Share additional information";
     } else {
       return step === 1
         ? "Let's start with the essentials about your NGO"
@@ -547,23 +512,6 @@ export default function OnboardingPage() {
                 <Card
                   className={cn(
                     "cursor-pointer transition-all hover:border-primary",
-                    entityType === "government" && "border-2 border-primary"
-                  )}
-                  onClick={() => selectEntityType("government")}
-                >
-                  <CardHeader className="p-4">
-                    <CardTitle className="text-lg">Government</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <p className="text-sm text-muted-foreground">
-                      For government agencies and public sector entities
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card
-                  className={cn(
-                    "cursor-pointer transition-all hover:border-primary",
                     entityType === "ngo" && "border-2 border-primary"
                   )}
                   onClick={() => selectEntityType("ngo")}
@@ -589,8 +537,6 @@ export default function OnboardingPage() {
                   ? "Complete Your Company Profile"
                   : entityType === "investor"
                   ? "Complete Your Investor Profile"
-                  : entityType === "government"
-                  ? "Complete Your Government Entity Profile"
                   : "Complete Your NGO Profile"}
               </h1>
               <p className="text-muted-foreground mt-2">
@@ -1509,24 +1455,7 @@ export default function OnboardingPage() {
                   </form>
                 )}
 
-                {/* Government Form Steps (Placeholder) */}
-                {entityType === "government" && (
-                  <div className="space-y-4">
-                    <p>
-                      Government entity onboarding form will be available soon.
-                    </p>
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Government Entity Name</Label>
-                      <Input
-                        id="name"
-                        {...governmentForm.register("name")}
-                        placeholder="Enter government entity name"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* NGO Form Steps (Placeholder) */}
+                {/* ESO Form Steps (Placeholder) */}
                 {entityType === "ngo" && (
                   <div className="space-y-4">
                     <p>NGO onboarding form will be available soon.</p>
@@ -1561,8 +1490,6 @@ export default function OnboardingPage() {
                         ? companyForm.handleSubmit(onSubmit)
                         : entityType === "investor"
                         ? investorForm.handleSubmit(onSubmit)
-                        : entityType === "government"
-                        ? governmentForm.handleSubmit(onSubmit)
                         : ngoForm.handleSubmit(onSubmit)
                     }
                   >
