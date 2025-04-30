@@ -146,3 +146,24 @@
     @apply bg-background text-foreground;
   }
 }
+
+.cl-internal-1dauvpw {
+  opacity: 0;
+  display: none;
+}
+
+.cl-internal-7hb1uf {
+  box-shadow: none !important;
+}
+
+.cl-internal-1p733cp {
+  border: none;
+  border-radius: none;
+  box-shadow: none !important;
+}
+
+.cl-internal-4x6jej {
+  background: none;
+  margin-top: -40px;
+  z-index: 9999;
+}

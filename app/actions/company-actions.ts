@@ -67,8 +67,31 @@ export async function getCompaniesAction(filters?: {
   limit?: number;
 }) {
   try {
-    const result = await getAllCompanies(filters);
-    return { success: true, ...result };
+    await connect();
+    // const { userId, sector, stage, search, page = 1, limit = 10 } = filters || {};
+    // const query: any = {};
+    // const options: any = {
+    //   page: page || 1,
+    //   limit: limit || 10,
+    // };
+    // const sort: any = { createdAt: -1 };
+
+    // const companyQuery = Company.find(query, null, options).sort(sort);
+    // const total = await Company.countDocuments(query);
+
+    // const companies = await companyQuery.exec();
+    // const result = {
+    //   success: true,
+    //   data: companies,
+    //   total,
+    //   page: options.page,
+    //   totalPages: Math.ceil(total / options.limit),
+    // };
+
+    const result = await Company.find().sort({ createdAt: -1 });
+    const companies = JSON.parse(JSON.stringify(result));
+
+    return { success: true, companies: companies };
   } catch (error) {
     console.error("Error fetching companies:", error);
     return {
@@ -92,7 +115,9 @@ export async function getCompanyByIdAction(id: string) {
       return { success: false, error: "Company not found" };
     }
 
-    return { success: true, company };
+    const companyData = JSON.parse(JSON.stringify(company));
+
+    return { success: true, company: companyData };
   } catch (error: any) {
     console.error("Error fetching company:", error);
     return { success: false, error: "Failed to fetch company" };

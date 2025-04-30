@@ -159,7 +159,9 @@ export default function CompanyDetailsPage({ company }: any) {
             <CardDescription>Founded</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{company.foundedAt}</div>
+            <div className="text-2xl font-bold">
+              {formatDate(company.foundedAt)}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -227,7 +229,9 @@ export default function CompanyDetailsPage({ company }: any) {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Founded</span>
-                  <span className="font-medium">{company.foundedAt}</span>
+                  <span className="font-medium">
+                    {formatDate(company.foundedAt)}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">
