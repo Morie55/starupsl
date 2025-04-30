@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 // import { AppLayout } from "@/components/app-layout";
-import { CompaniesTable } from "@/components/companies-table";
+// import { CompaniesTable } from "@/components/companies-table";
 import { Button } from "@/components/ui/button";
 import {
   Card,

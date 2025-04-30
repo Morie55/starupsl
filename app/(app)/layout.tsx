@@ -66,8 +66,12 @@ export default function RootLayout({
           </Button>
           <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                <FileText className="h-4 w-4" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-md">
+                <img
+                  src="/images/startup-sl_logos.png"
+                  alt="StartUp-SL Logo"
+                  className="h-full w-full object-contain rounded-md"
+                />
               </div>
               <span className="text-xl font-bold">StartUp-SL</span>
             </Link>
@@ -113,8 +117,13 @@ export default function RootLayout({
             <nav className="flex h-full flex-col border-r bg-muted/40">
               <div className="flex h-14 items-center border-b px-4">
                 <Link href="/" className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                    <FileText className="h-4 w-4" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md">
+                    {/* <FileText className="h-4 w-4" /> */}
+                    <img
+                      src="/images/startup-sl_logos.png"
+                      alt="StartUp-SL Logo"
+                      className="h-full w-full object-contain rounded-md"
+                    />
                   </div>
                   <span className="text-lg font-bold">StartUpSL</span>
                 </Link>

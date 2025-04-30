@@ -449,11 +449,11 @@ export default function OnboardingPage() {
         : "Share additional documents and information";
     } else {
       return step === 1
-        ? "Let's start with the essentials about your NGO"
+        ? "Let's start with the essentials about your ESO"
         : step === 2
         ? "How can people reach your organization?"
         : step === 3
-        ? "Tell us more about your NGO's mission"
+        ? "Tell us more about your ESO's mission"
         : "Share additional information";
     }
   };
@@ -934,9 +934,7 @@ export default function OnboardingPage() {
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label htmlFor="fundingStatus">
-                              Funding Status
-                            </Label>
+                            <Label htmlFor="fundingStatus">Types of Fund</Label>
                             <Select
                               onValueChange={(value) =>
                                 companyForm.setValue("fundingStatus", value)
