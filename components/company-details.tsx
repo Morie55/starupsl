@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -39,9 +39,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FundingRoundsPage } from "@/components/funding-rounds-page";
 import RoundsTable from "@/components/rounds-table";
+import { getAllRounds, getCompanyRounds } from "@/app/actions/round-actions";
+import { set } from "mongoose";
 
 export default function CompanyDetailsPage({ company }: any) {
   const [activeTab, setActiveTab] = useState("overview");
+  const [rounds, setRounds] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const getInitials = (name: string) => {
     return name
@@ -69,6 +73,18 @@ export default function CompanyDetailsPage({ company }: any) {
     };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
+
+  const fetchRounds = async () => {
+    setLoading(true);
+    const rounds: any = await getCompanyRounds(company._id);
+
+    setRounds(rounds);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchRounds();
+  }, [company._id]);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -274,7 +290,8 @@ export default function CompanyDetailsPage({ company }: any) {
                 Current funding status and requirements
               </CardDescription>
             </CardHeader>
-            <RoundsTable />
+
+            <RoundsTable rounds={rounds} loading={loading} />
             <CardFooter>
               <Button className="w-full">Contact for Investment</Button>
             </CardFooter>

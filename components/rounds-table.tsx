@@ -71,7 +71,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export default function RoundsTable() {
+export default function RoundsTable({ rounds, loading }: any) {
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [searchQuery, setSearchQuery] = useState("");
@@ -86,47 +86,8 @@ export default function RoundsTable() {
   });
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
-  // const { state, actions } = useRounds();
-  // const { rounds, loading, error } = state;
-
-  // // Fetch rounds when component mounts
-  // useEffect(() => {
-  //   actions.fetchRounds();
-  // }, [actions]);
-
-  // // Handle errors
-  // useEffect(() => {
-  //   if (error) {
-  //     toast({
-  //       title: "Error",
-  //       description: error,
-  //       variant: "destructive",
-  //     });
-  //     actions.clearError();
-  //   }
-  // }, [error, actions]);
-  const { state, actions } = useRounds();
-  const { rounds, loading, error } = state;
-
-  // Fetch rounds when the component mounts
-  useEffect(() => {
-    actions.fetchRounds(); // Ensure this is stable
-  }, []); // Empty dependency array ensures it runs only once
-
-  // Handle errors
-  useEffect(() => {
-    if (error) {
-      toast({
-        title: "Error",
-        description: error,
-        variant: "destructive",
-      });
-      actions.clearError(); // Ensure this is stable
-    }
-  }, [error]); // Only depend on `error`
-
   // Filter rounds based on search query and filters
-  const filteredRounds = rounds.filter((round: any) => {
+  const filteredRounds = rounds?.filter((round: any) => {
     // Search query filter
     const matchesSearch =
       searchQuery === "" ||
@@ -151,8 +112,8 @@ export default function RoundsTable() {
   });
 
   // Pagination
-  const totalPages = Math.ceil(filteredRounds.length / itemsPerPage);
-  const paginatedRounds = filteredRounds.slice(
+  const totalPages = Math.ceil(filteredRounds?.length / itemsPerPage);
+  const paginatedRounds = filteredRounds?.slice(
     (page - 1) * itemsPerPage,
     page * itemsPerPage
   );
@@ -168,10 +129,10 @@ export default function RoundsTable() {
 
   // Handle select all
   const toggleSelectAll = () => {
-    if (selectedRows.length === paginatedRounds.length) {
+    if (selectedRows.length === paginatedRounds?.length) {
       setSelectedRows([]);
     } else {
-      setSelectedRows(paginatedRounds.map((round: any) => round._id));
+      setSelectedRows(paginatedRounds?.map((round: any) => round._id));
     }
   };
 
@@ -436,8 +397,8 @@ export default function RoundsTable() {
                     <TableHead className="w-[40px]">
                       <Checkbox
                         checked={
-                          paginatedRounds.length > 0 &&
-                          selectedRows.length === paginatedRounds.length
+                          paginatedRounds?.length > 0 &&
+                          selectedRows.length === paginatedRounds?.length
                         }
                         onCheckedChange={toggleSelectAll}
                         aria-label="Select all"
@@ -459,7 +420,7 @@ export default function RoundsTable() {
                         Loading rounds...
                       </TableCell>
                     </TableRow>
-                  ) : paginatedRounds.length === 0 ? (
+                  ) : paginatedRounds?.length === 0 ? (
                     <TableRow>
                       <TableCell
                         colSpan={8}
@@ -469,7 +430,7 @@ export default function RoundsTable() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    paginatedRounds.map((round: any) => (
+                    paginatedRounds?.map((round: any) => (
                       <TableRow key={round._id}>
                         <TableCell>
                           <Checkbox
@@ -584,13 +545,13 @@ export default function RoundsTable() {
             <p className="text-sm text-muted-foreground">
               Showing{" "}
               <strong>
-                {filteredRounds.length > 0 ? (page - 1) * itemsPerPage + 1 : 0}
+                {filteredRounds?.length > 0 ? (page - 1) * itemsPerPage + 1 : 0}
               </strong>{" "}
               to{" "}
               <strong>
-                {Math.min(page * itemsPerPage, filteredRounds.length)}
+                {Math.min(page * itemsPerPage, filteredRounds?.length)}
               </strong>{" "}
-              of <strong>{filteredRounds.length}</strong> rounds
+              of <strong>{filteredRounds?.length}</strong> rounds
             </p>
             {/* <Select
               value={itemsPerPage.toString()}

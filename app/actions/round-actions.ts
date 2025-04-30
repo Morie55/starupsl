@@ -65,6 +65,35 @@ export async function getAllRounds(): Promise<IRound[]> {
   }
 }
 
+export async function getCompanyRounds(companyId: string): Promise<IRound[]> {
+  try {
+    await connectDB();
+
+    const rounds: any = await Round.find({ companyId: companyId }).sort({
+      createdAt: -1,
+    });
+
+    const roundDatas = JSON.parse(JSON.stringify(rounds));
+    const companies = await Company.find();
+    // const companyIds: any = rounds.map((round: any) => round.companyId);
+    // const companies = await Company.find({ _id: { $in: companyIds } });
+
+    const companyMap = companies.reduce((acc: any, company: any) => {
+      acc[company._id] = company.name;
+      return acc;
+    }, {});
+
+    roundDatas.forEach((round: any) => {
+      round.companyName = companyMap[round.companyId] || "Unknown Company";
+    });
+
+    return JSON.parse(JSON.stringify(roundDatas));
+  } catch (error: any) {
+    console.error("Failed to fetch rounds:", error);
+    throw new Error(error.message || "Failed to fetch rounds");
+  }
+}
+
 // Get a single round by ID
 export async function getRoundById(id: string) {
   try {
