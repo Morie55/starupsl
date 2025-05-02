@@ -54,6 +54,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { useRounds } from "@/contexts/rounds-context";
 import { Avatar, AvatarFallback } from "./ui/avatar";
+import { usePathname } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 
 // Helper function to get status badge color
 const getStatusColor = (status: string) => {
@@ -85,7 +87,8 @@ export default function RoundsTable({ rounds, loading }: any) {
     to: undefined,
   });
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
-
+  const pathname = usePathname();
+  const { user } = useUser();
   // Filter rounds based on search query and filters
   const filteredRounds = rounds?.filter((round: any) => {
     // Search query filter
@@ -155,28 +158,6 @@ export default function RoundsTable({ rounds, loading }: any) {
   return (
     <div className="container max-w-6xl py-8">
       <div className="flex flex-col space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">Funding Rounds</h1>
-            <p className="text-muted-foreground">
-              Manage and track all your funding rounds
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button asChild>
-              <Link href="/rounds/new">
-                <Plus className="h-4 w-4 mr-2" />
-                New Round
-              </Link>
-            </Button>
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-          </div>
-        </div>
-
         {/* Filters */}
         <Card>
           <CardHeader className="pb-3">
@@ -507,29 +488,15 @@ export default function RoundsTable({ rounds, loading }: any) {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem asChild>
-                                <Link href={`/round/${round._id}`}>
-                                  View details
-                                </Link>
-                              </DropdownMenuItem>
 
-                              <DropdownMenuSeparator />
-
-                              <DropdownMenuItem>Export data</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
+                        {user?.publicMetadata.role === "company" ||
+                          (user?.publicMetadata.role === "admin" && (
+                            <TableCell>
+                              <Link href={`/round/${round._id}`}>
+                                <Button>View details</Button>
+                              </Link>
+                            </TableCell>
+                          ))}
                       </TableRow>
                     ))
                   )}

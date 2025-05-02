@@ -16,6 +16,7 @@ import {
   MapPin,
   MoreHorizontal,
   Phone,
+  Plus,
   Share2,
 } from "lucide-react";
 
@@ -41,11 +42,14 @@ import { FundingRoundsPage } from "@/components/funding-rounds-page";
 import RoundsTable from "@/components/rounds-table";
 import { getAllRounds, getCompanyRounds } from "@/app/actions/round-actions";
 import { set } from "mongoose";
+import HasPermissionC from "@/app/_permission/clientPermission";
+import { useUser } from "@clerk/nextjs";
 
 export default function CompanyDetailsPage({ company }: any) {
   const [activeTab, setActiveTab] = useState("overview");
   const [rounds, setRounds] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useUser();
 
   const getInitials = (name: string) => {
     return name
@@ -98,16 +102,23 @@ export default function CompanyDetailsPage({ company }: any) {
           Back to Companies
         </Link>
         <div className="flex items-center gap-2">
+          <Button variant="default" size="sm">
+            Follow
+          </Button>
           <Button variant="outline" size="sm">
             <Share2 className="mr-2 h-4 w-4" />
             Share
           </Button>
-          <Link href="/companies/id/edit">
-            <Button variant="outline" size="sm">
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Button>
-          </Link>
+
+          {user?.id === company.userId && (
+            <Link href="/companies/id/edit">
+              <Button variant="outline" size="sm">
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Button>
+            </Link>
+          )}
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -119,9 +130,11 @@ export default function CompanyDetailsPage({ company }: any) {
               <DropdownMenuItem>Export as PDF</DropdownMenuItem>
               <DropdownMenuItem>Print details</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
-                Delete company
-              </DropdownMenuItem>
+              {user?.id === company.userId && (
+                <DropdownMenuItem className="text-destructive">
+                  Delete company
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -284,13 +297,25 @@ export default function CompanyDetailsPage({ company }: any) {
         {/* Funding Tab */}
         <TabsContent value="funding" className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Funding Overview</CardTitle>
-              <CardDescription>
-                Current funding status and requirements
-              </CardDescription>
-            </CardHeader>
-
+            {/* Header */}
+            <div className=" pt-4 px-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h1 className="text-2xl font-bold">Funding Rounds</h1>
+                <p className="text-muted-foreground">
+                  Manage and track all your funding rounds
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {user?.id === company.userId && (
+                  <Link href="/rounds/new">
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Round
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
             <RoundsTable rounds={rounds} loading={loading} />
             <CardFooter>
               <Button className="w-full">Contact for Investment</Button>
