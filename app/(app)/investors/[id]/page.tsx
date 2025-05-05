@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowLeft,
-  BarChart3,
   Building2,
   Download,
   Edit,

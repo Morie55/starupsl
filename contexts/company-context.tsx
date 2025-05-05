@@ -134,10 +134,10 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         const result = await getCompaniesAction(filters);
 
         if (result.success) {
-          setCompanies(result.data);
-          setTotalCompanies(result.total);
-          setCurrentPage(result.page);
-          setTotalPages(result.totalPages);
+          setCompanies(result.data || []);
+          setTotalCompanies(result.total ?? 0);
+          setCurrentPage(result.page ?? 1);
+          setTotalPages(result.totalPages ?? 1);
         } else {
           setError(result.error || "Failed to fetch companies");
         }
