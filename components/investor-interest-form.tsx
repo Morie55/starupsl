@@ -1,10 +1,10 @@
 "use client";
 
-import type React from "react";
-
 import { useState } from "react";
-import { ArrowLeft, Calendar } from "lucide-react";
-import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { HelpCircle, Info, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,10 +15,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -26,343 +33,644 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "@/components/ui/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
 
-export default function InvestorInterestForm() {
+const investmentRanges = [
+  { value: "10k-50k", label: "$10,000 - $50,000" },
+  { value: "50k-100k", label: "$50,000 - $100,000" },
+  { value: "100k-250k", label: "$100,000 - $250,000" },
+  { value: "250k-500k", label: "$250,000 - $500,000" },
+  { value: "500k-1m", label: "$500,000 - $1,000,000" },
+  { value: "1m-5m", label: "$1,000,000 - $5,000,000" },
+  { value: "5m+", label: "$5,000,000+" },
+];
+
+const investorTypes = [
+  { value: "angel", label: "Angel Investor" },
+  { value: "vc", label: "Venture Capital" },
+  { value: "pe", label: "Private Equity" },
+  { value: "family_office", label: "Family Office" },
+  { value: "corporate", label: "Corporate Investor" },
+  { value: "individual", label: "Individual Investor" },
+  { value: "other", label: "Other" },
+];
+
+const timeframes = [
+  { value: "immediate", label: "Immediate (0-3 months)" },
+  { value: "short", label: "Short-term (3-6 months)" },
+  { value: "medium", label: "Medium-term (6-12 months)" },
+  { value: "long", label: "Long-term (12+ months)" },
+];
+
+const investmentGoals = [
+  { id: "growth", label: "Growth & Expansion" },
+  { id: "income", label: "Regular Income" },
+  { id: "strategic", label: "Strategic Partnership" },
+  { id: "acquisition", label: "Potential Acquisition" },
+  { id: "diversification", label: "Portfolio Diversification" },
+];
+
+const formSchema = z.object({
+  // Personal Information
+  fullName: z
+    .string()
+    .min(2, { message: "Full name must be at least 2 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  phone: z.string().optional(),
+  company: z.string().optional(),
+
+  // Investor Profile
+  investorType: z.string({ required_error: "Please select an investor type." }),
+  investmentExperience: z.enum(
+    ["none", "beginner", "intermediate", "experienced"],
+    {
+      required_error: "Please select your investment experience.",
+    }
+  ),
+
+  // Investment Details
+  investmentRange: z.string({
+    required_error: "Please select an investment range.",
+  }),
+  timeframe: z.string({ required_error: "Please select a timeframe." }),
+  investmentGoals: z
+    .array(z.string())
+    .min(1, { message: "Please select at least one investment goal." }),
+
+  // Additional Information
+  investmentThesis: z
+    .string()
+    .min(10, { message: "Investment thesis must be at least 10 characters." })
+    .max(1000, {
+      message: "Investment thesis must not exceed 1000 characters.",
+    }),
+  questions: z.string().optional(),
+
+  // Previous Investments
+  hasPreviousInvestments: z.boolean(),
+  previousInvestments: z.string().optional(),
+
+  // Terms
+  termsAgreed: z.boolean().refine((val) => val === true, {
+    message: "You must agree to the terms and conditions.",
+  }),
+  contactPreference: z.enum(["email", "phone", "both"], {
+    required_error: "Please select your contact preference.",
+  }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+export default function InvestorInterestForm({ company }: { company: any }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+      company: "",
+      investorType: "",
+      investmentExperience: "none",
+      investmentRange: "",
+      timeframe: "",
+      investmentGoals: [],
+      investmentThesis: "",
+      questions: "",
+      hasPreviousInvestments: false,
+      previousInvestments: "",
+      termsAgreed: false,
+      contactPreference: "email",
+    },
+  });
+
+  const watchHasPreviousInvestments = form.watch("hasPreviousInvestments");
+
+  async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
 
-    // Simulate form submission
-    setTimeout(() => {
+    try {
+      // Here you would typically send the data to your backend
+      console.log("Form values:", values);
+      console.log("Company ID:", company?._id);
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // Show success message
+      alert(
+        "Your interest has been submitted successfully. The company will be in touch with you shortly."
+      );
+
+      form.reset();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("There was an error submitting your interest. Please try again.");
+    } finally {
       setIsSubmitting(false);
-      toast({
-        title: "Interest submitted",
-        description:
-          "Your investment interest has been submitted successfully. We'll be in touch soon.",
-      });
-    }, 1500);
-  };
+    }
+  }
 
   return (
-    <div className="flex flex-col gap-6 p-6 md:gap-8 md:p-8">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" asChild>
-          <Link href="/companies">
-            <ArrowLeft className="h-4 w-4" />
-            <span className="sr-only">Back to companies</span>
-          </Link>
-        </Button>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-          Investor Interest Form
-        </h1>
-      </div>
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl">Express Investment Interest</CardTitle>
+        <CardDescription>
+          Complete this form to express your interest in investing in{" "}
+          {company?.name || "this company"}
+        </CardDescription>
+      </CardHeader>
 
-      <div className="grid gap-6 md:grid-cols-7 lg:grid-cols-3 lg:gap-8">
-        {/* Main form content */}
-        <div className="md:col-span-4 lg:col-span-2">
-          <form onSubmit={handleSubmit}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Investment Interest</CardTitle>
-                <CardDescription>
-                  Please provide your information and investment preferences to
-                  express interest in this company.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Investor Information */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Investor Information</h3>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            {/* Personal Information Section */}
+            <div>
+              <h3 className="text-lg font-medium mb-4">Personal Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="investor-type">Investor Type</Label>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="john.doe@example.com"
+                          type="email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+1 (555) 123-4567" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Optional, but recommended for follow-up
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="company"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company/Firm</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Acme Ventures" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        If you're representing an organization
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Investor Profile Section */}
+            <div>
+              <h3 className="text-lg font-medium mb-4">Investor Profile</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="investorType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Investor Type *</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select investor type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {investorTypes.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="investmentExperience"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Investment Experience *</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select experience level" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">
+                            No Prior Experience
+                          </SelectItem>
+                          <SelectItem value="beginner">
+                            Beginner (1-2 investments)
+                          </SelectItem>
+                          <SelectItem value="intermediate">
+                            Intermediate (3-10 investments)
+                          </SelectItem>
+                          <SelectItem value="experienced">
+                            Experienced (10+ investments)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Investment Details Section */}
+            <div>
+              <h3 className="text-lg font-medium mb-4">Investment Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <FormField
+                  control={form.control}
+                  name="investmentRange"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        Investment Range *
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>The amount you're considering investing</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select range" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {investmentRanges.map((range) => (
+                            <SelectItem key={range.value} value={range.value}>
+                              {range.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="timeframe"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Investment Timeframe *</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select timeframe" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {timeframes.map((timeframe) => (
+                            <SelectItem
+                              key={timeframe.value}
+                              value={timeframe.value}
+                            >
+                              {timeframe.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="investmentGoals"
+                render={() => (
+                  <FormItem>
+                    <div className="mb-4">
+                      <FormLabel>Investment Goals *</FormLabel>
+                      <FormDescription>
+                        Select all that apply to your investment strategy
+                      </FormDescription>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {investmentGoals.map((item) => (
+                        <FormField
+                          key={item.id}
+                          control={form.control}
+                          name="investmentGoals"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={item.id}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(item.id)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([
+                                            ...field.value,
+                                            item.id,
+                                          ])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== item.id
+                                            )
+                                          );
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  {item.label}
+                                </FormLabel>
+                              </FormItem>
+                            );
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <Separator />
+
+            {/* Additional Information Section */}
+            <div>
+              <h3 className="text-lg font-medium mb-4">
+                Additional Information
+              </h3>
+
+              <FormField
+                control={form.control}
+                name="investmentThesis"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Investment Thesis *</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Explain why you're interested in investing in this company and what you see as the potential..."
+                        className="min-h-[120px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Briefly describe your investment thesis and what interests
+                      you about this company.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="mt-6">
+                <FormField
+                  control={form.control}
+                  name="hasPreviousInvestments"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          I have previous investments in similar
+                          companies/sectors
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {watchHasPreviousInvestments && (
+                <div className="mt-4">
+                  <FormField
+                    control={form.control}
+                    name="previousInvestments"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Previous Investments</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Please briefly describe your previous investments in similar companies or sectors..."
+                            className="min-h-[80px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              <div className="mt-6">
+                <FormField
+                  control={form.control}
+                  name="questions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Questions</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Any specific questions you have for the company..."
+                          className="min-h-[80px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Any specific questions you'd like answered before
+                        proceeding.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Contact Preferences */}
+            <div>
+              <h3 className="text-lg font-medium mb-4">Contact Preferences</h3>
+
+              <FormField
+                control={form.control}
+                name="contactPreference"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Preferred Contact Method *</FormLabel>
+                    <FormControl>
                       <RadioGroup
-                        defaultValue="individual"
-                        id="investor-type"
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
                         className="flex flex-col space-y-1"
                       >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="individual" id="individual" />
-                          <Label htmlFor="individual">Individual</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem
-                            value="organization"
-                            id="organization"
-                          />
-                          <Label htmlFor="organization">Organization</Label>
-                        </div>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="email" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Email Only
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="phone" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Phone Only
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="both" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Both Email and Phone
+                          </FormLabel>
+                        </FormItem>
                       </RadioGroup>
-                    </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="investor-name">
-                        Full Name / Organization Name
-                      </Label>
-                      <Input
-                        id="investor-name"
-                        placeholder="Enter your name"
-                        required
-                      />
-                    </div>
-                  </div>
+            <Separator />
 
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="you@example.com"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="+1 (555) 000-0000"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Investment Details */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Investment Details</h3>
-
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="investment-range">Investment Range</Label>
-                      <Select required>
-                        <SelectTrigger id="investment-range">
-                          <SelectValue placeholder="Select range" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="under-10k">
-                            Under $10,000
-                          </SelectItem>
-                          <SelectItem value="10k-50k">
-                            $10,000 - $50,000
-                          </SelectItem>
-                          <SelectItem value="50k-100k">
-                            $50,000 - $100,000
-                          </SelectItem>
-                          <SelectItem value="100k-500k">
-                            $100,000 - $500,000
-                          </SelectItem>
-                          <SelectItem value="500k-1m">
-                            $500,000 - $1 million
-                          </SelectItem>
-                          <SelectItem value="over-1m">
-                            Over $1 million
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="investment-timeline">
-                        Investment Timeline
-                      </Label>
-                      <Select required>
-                        <SelectTrigger id="investment-timeline">
-                          <SelectValue placeholder="Select timeline" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="immediate">
-                            Immediate (0-3 months)
-                          </SelectItem>
-                          <SelectItem value="short">
-                            Short-term (3-6 months)
-                          </SelectItem>
-                          <SelectItem value="medium">
-                            Medium-term (6-12 months)
-                          </SelectItem>
-                          <SelectItem value="long">
-                            Long-term (12+ months)
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="investment-goals">Investment Goals</Label>
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="goal-growth" />
-                        <Label htmlFor="goal-growth">Growth</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="goal-income" />
-                        <Label htmlFor="goal-income">Income</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="goal-diversification" />
-                        <Label htmlFor="goal-diversification">
-                          Diversification
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="goal-impact" />
-                        <Label htmlFor="goal-impact">Impact Investing</Label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="prior-experience">
-                      Prior Investment Experience
-                    </Label>
-                    <Select>
-                      <SelectTrigger id="prior-experience">
-                        <SelectValue placeholder="Select experience level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        <SelectItem value="limited">
-                          Limited (1-2 investments)
-                        </SelectItem>
-                        <SelectItem value="moderate">
-                          Moderate (3-5 investments)
-                        </SelectItem>
-                        <SelectItem value="experienced">
-                          Experienced (6+ investments)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Additional Information */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Additional Information</h3>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="questions">Questions or Comments</Label>
-                    <Textarea
-                      id="questions"
-                      placeholder="Please share any questions or additional information about your investment interest"
-                      className="min-h-[100px]"
+            {/* Terms and Conditions */}
+            <FormField
+              control={form.control}
+              name="termsAgreed"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
                     />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>I agree to the terms and conditions *</FormLabel>
+                    <FormDescription>
+                      By submitting this form, you agree that the company may
+                      contact you regarding your investment interest. Your
+                      information will be kept confidential and only shared with
+                      relevant team members.
+                    </FormDescription>
                   </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                  <div className="flex items-start space-x-2">
-                    <Checkbox id="terms" required />
-                    <div className="grid gap-1.5 leading-none">
-                      <Label
-                        htmlFor="terms"
-                        className="text-sm font-normal leading-snug text-muted-foreground"
-                      >
-                        I agree to the terms and conditions and understand that
-                        my information will be used as described in the privacy
-                        policy.
-                      </Label>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button
-                  type="submit"
-                  className="ml-auto"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Interest"}
-                </Button>
-              </CardFooter>
-            </Card>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Submitting...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Send className="h-4 w-4" />
+                  Submit Interest
+                </span>
+              )}
+            </Button>
           </form>
+        </Form>
+      </CardContent>
+
+      <CardFooter className="flex flex-col space-y-4 border-t pt-6">
+        <div className="flex items-center text-sm text-muted-foreground">
+          <Info className="h-4 w-4 mr-2" />
+          Your information will be shared only with the company. See our privacy
+          policy for details.
         </div>
-
-        {/* Sidebar */}
-        <div className="md:col-span-3 lg:col-span-1 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>About This Company</CardTitle>
-              <CardDescription>
-                Key information about the investment opportunity
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Company Name
-                </h3>
-                <p>Morie Keita</p>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Sector
-                </h3>
-                <p>Energy</p>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Stage
-                </h3>
-                <p>Pre-Seed</p>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Funding Needed
-                </h3>
-                <p>$100,000</p>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Founded
-                </h3>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>April 2, 2025</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>What Happens Next?</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ol className="list-decimal pl-4 space-y-2">
-                <li>We'll review your investment interest</li>
-                <li>A company representative will contact you</li>
-                <li>You'll receive detailed investment information</li>
-                <li>Schedule a meeting to discuss next steps</li>
-              </ol>
-
-              <p className="text-sm text-muted-foreground mt-4">
-                For immediate assistance, please contact our investment
-                relations team at
-                <a
-                  href="mailto:invest@startupsl.com"
-                  className="text-primary hover:underline ml-1"
-                >
-                  invest@startupsl.com
-                </a>
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 }
