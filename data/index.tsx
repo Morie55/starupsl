@@ -26,6 +26,7 @@ export const fundingStatus = [
   "Seed",
   "Series A",
   "Series B",
+  "Series C",
   "Public",
   "Acquired",
 ];
@@ -51,22 +52,24 @@ export const educationalBackground = [
   "Technical/Vocational",
   "University",
   "Post Graduate",
-  "Other",
+  "Informal",
+  "None",
 ];
 
 export const sectorSpecificLicenses = [
   "Yes, I hold",
   "Yes, but I do not hold",
   "No, I do not require",
+  "None of the above",
 ];
 
 export const externalFundingAccess = [
-  "None",
-  "Grants",
-  "Loans",
+  "Friends/family",
   "Angel Investment",
+  "Grants",
   "Venture Capital",
-  "Friends/Family",
+  "Loans",
+  "Crowdfunding",
   "Other...",
 ];
 

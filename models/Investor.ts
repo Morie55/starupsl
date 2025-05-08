@@ -8,7 +8,6 @@ const InvestorSchema = new mongoose.Schema(
     location: { type: String },
     foundedAt: { type: String },
     logo: { type: String },
-    registrationNumber: { type: String },
     type: { type: String },
     email: { type: String },
     phone: { type: String },

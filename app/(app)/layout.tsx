@@ -78,13 +78,29 @@ export default function RootLayout({
           </div>
 
           {/* Centered and Responsive Search bar in navbar */}
-          <div className="hidden md:flex flex-1 justify-center">
+          {/* <div className="hidden md:flex flex-1 justify-center">
             <div className="relative w-full max-w-md">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <input
                 type="search"
                 placeholder="Search companies, investors, startups..."
                 className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+            </div>
+          </div> */}
+          <div className="hidden md:flex flex-1 justify-center">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
+              <input
+                type="search"
+                placeholder="Search companies, investors, startups..."
+                className="h-11 w-full rounded-xl border border-gray-300 dark:border-gray-700 
+                 bg-white/70 dark:bg-white/10 backdrop-blur-md 
+                 pl-11 pr-4 text-sm text-gray-800 dark:text-gray-100 
+                 placeholder-gray-400 dark:placeholder-gray-500 
+                 shadow-sm transition-all duration-300 
+                 focus:border-blue-500 dark:focus:border-blue-400 
+                 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 focus:ring-offset-0"
               />
             </div>
           </div>

@@ -1502,19 +1502,31 @@
 //     </div>
 //   );
 // }
+
+// ------------------------------------------------------------------------------ //
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import {
+  Building2,
   CalendarIcon,
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  Globe,
+  HelpCircle,
+  Info,
+  Mail,
+  MapPin,
+  Phone,
+  Users,
 } from "lucide-react";
+import { debounce } from "lodash";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -1544,6 +1556,15 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Progress } from "@/components/ui/progress";
 
 import { toast } from "@/components/ui/use-toast";
 import { sectorsData } from "@/data/sectors";
@@ -1558,23 +1579,22 @@ import {
 } from "@/data";
 import { useUser } from "@clerk/nextjs";
 
-// Entity type selection schema
-const entityTypeSchema = z.object({
-  entityType: z.enum(["company", "investor", "government", "ngo"]),
-});
-
-// Company form schema
+// Enhanced Company form schema with all new fields
 const companyFormSchema = z.object({
   // Step 1: Basic Information
-  name: z.string().min(2, "Company name must be at least 2 characters"),
+  name: z
+    .string()
+    .min(2, "Company name must be at least 2 characters")
+    .max(100, "Company name is too long"),
   sector: z.string().min(1, "Sector is required"),
+  otherSector: z.string().optional(),
   type: z.string().optional(),
   stage: z.string().optional(),
 
   // Step 2: Contact Information
-  email: z.string().email("Invalid email address").optional(),
-  phone: z.string().optional(),
-  address: z.string().optional(),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(5, "Phone number is too short").optional(),
+  address: z.string().min(5, "Address is too short").optional(),
   website: z.string().url("Invalid website URL").optional().or(z.literal("")),
   socialLinks: z
     .array(
@@ -1589,77 +1609,137 @@ const companyFormSchema = z.object({
   location: z.string().optional(),
   foundedAt: z.date().optional(),
   registrationNumber: z.string().optional(),
-  description: z.string().optional(),
-  missionStatement: z.string().optional(),
+  description: z
+    .string()
+    .min(10, "Please provide a more detailed description")
+    .max(1000, "Description is too long")
+    .optional(),
+  missionStatement: z
+    .string()
+    .max(500, "Mission statement is too long")
+    .optional(),
   employeesRange: z.string().optional(),
 
   // Step 4: Funding Information
   fundingStatus: z.string().optional(),
-  amountRaised: z.number().nonnegative().optional(),
-  fundingNeeded: z.number().nonnegative().optional(),
-  foundingDocuments: z.string().optional(),
+  amountRaised: z.number().nonnegative("Amount must be positive").optional(),
+  fundingNeeded: z.number().nonnegative("Amount must be positive").optional(),
+  fundingDocuments: z.string().optional(),
   pitchDeck: z.string().optional(),
 
-  // General Business Information
-  headOfficeAddress: z.string().optional(),
-  businessPhone: z.string().optional(),
-  businessDescription: z.string().optional(),
-  isYouthLed: z.boolean().optional(),
-  isWomanLed: z.boolean().optional(),
+  // Step 5: General Business Information
+  headOfficeAddress: z.string().min(1, "Head office address is required"),
+  businessModel: z.enum(["B2B", "B2C", "B2G", "Other"]),
+  otherBusinessModel: z.string().optional(),
+  isYouthLed: z.enum(["Yes", "No"]),
+  isWomanLed: z.enum(["Yes", "No"]),
 
-  // Ownership & Management
-  founderName: z.string().optional(),
-  founderGender: z.enum(["male", "female", "prefer_not_to_say"]).optional(),
-  founderDob: z.date().optional(),
-  founderEducation: z
-    .enum([
-      "primary",
-      "secondary",
-      "tertiary",
-      "technical_vocational",
-      "university",
-      "post_graduate",
-      "other",
+  // Step 6: Ownership & Management
+  founderName: z.string().min(1, "Founder name is required"),
+  founderGender: z.enum(["Male", "Female", "Prefer not to say"]),
+  founderDob: z.date().refine((date) => {
+    return date <= new Date();
+  }, "Date of birth cannot be in the future"),
+  founderEducation: z.enum([
+    "Primary",
+    "Secondary",
+    "Tertiary",
+    "Technical/vocational",
+    "University",
+    "Post Graduate",
+    "Informal",
+    "None",
+  ]),
+  taxCompliance: z.array(
+    z.enum(["NRA registration", "Nassit Registration", "None of the above"])
+  ),
+  sectorLicenses: z.enum([
+    "Yes, I hold",
+    "Yes, but I do not hold",
+    "No, I do not require",
+  ]),
+  hasIntellectualProperty: z.enum(["Yes", "No"]),
+
+  // Step 7: Financial & Banking
+  annualTurnoverBefore: z.string().min(1, "Annual turnover before is required"),
+  annualTurnoverCurrent: z
+    .string()
+    .min(1, "Current annual turnover is required"),
+  annualTurnoverNext: z
+    .string()
+    .min(1, "Projected annual turnover is required"),
+  hasBusinessBankAccount: z.enum(["Yes", "No"]),
+  externalFunding: z.array(
+    z.enum([
+      "Friends/family",
+      "Angel Investment",
+      "Grants",
+      "Venture Capital",
+      "Loans",
+      "Crowdfunding",
+      "None",
+      "Other",
     ])
+  ),
+  otherExternalFunding: z.string().optional(),
+  keepsFinancialRecords: z.enum(["Yes", "No", "Not Yet"]),
+
+  // Step 8: Innovation & Digital Tools
+  usesDigitalTools: z.enum(["Yes", "No"]),
+  digitalTools: z
+    .array(
+      z.enum([
+        "Mobile Money",
+        "Accounting Software",
+        "POS",
+        "E-commerce Platforms",
+        "Social Media Marketing",
+        "CRM / ERP Tools",
+        "Other",
+      ])
+    )
     .optional(),
+  otherDigitalTools: z.string().optional(),
+  isInnovative: z.enum(["Yes", "No"]),
+  innovationExplanation: z.string().optional(),
 
-  // Tax Compliance
-  taxCompliance: z.array(z.string()).optional(),
-  sectorLicenses: z
-    .enum(["yes_hold", "yes_not_hold", "not_required"])
-    .optional(),
-  intellectualProperty: z.boolean().optional(),
-
-  // Financial & Banking
-  annualTurnover: z.string().optional(),
-  businessBankAccount: z.boolean().optional(),
-  externalFunding: z.array(z.string()).optional(),
-  financialRecords: z.boolean().optional(),
-
-  // Innovation & Digital Tools
-  usesDigitalTools: z.boolean().optional(),
-  digitalTools: z.array(z.string()).optional(),
-  isInnovative: z.boolean().optional(),
-  innovationDescription: z.string().optional(),
-
-  // Challenges
-  businessChallenges: z.array(z.string()).optional(),
-  supportNeeded: z.string().optional(),
-  planToExpand: z.boolean().optional(),
+  // Step 9: Challenges & Growth
+  businessChallenges: z.array(
+    z.enum([
+      "Access to Finance",
+      "Market Access",
+      "Skilled Labour",
+      "Raw Materials",
+      "Infrastructure",
+      "Regulation / Compliance",
+      "Digital Skills",
+      "Other",
+    ])
+  ),
+  otherBusinessChallenges: z.string().optional(),
+  supportNeeded: z
+    .string()
+    .min(1, "Please describe the support your business needs"),
+  planningExpansion: z.enum(["Yes", "No"]),
   expansionPlans: z.string().optional(),
 
-  // Social & Environmental Impact
-  employsVulnerableGroups: z.boolean().optional(),
-  addressesEnvironmentalSustainability: z.boolean().optional(),
+  // Step 10: Social & Environmental Impact
+  employsVulnerableGroups: z.enum(["Yes", "No"]),
+  addressesEnvironmentalSustainability: z.enum(["Yes", "No"]),
   impactInitiatives: z.string().optional(),
 
-  // Consent & Follow Up
-  joinEcosystemPrograms: z.boolean().optional(),
-  agreeToDataStorage: z.boolean().optional(),
+  // Step 11: Consent & Follow Up
+  joinEcosystemPrograms: z.enum(["Yes", "No"]),
+  consentToDataUsage: z.enum(["Yes", "No"]),
   additionalComments: z.string().optional(),
 });
 
-// Investor form schema
+// Entity type selection schema
+const entityTypeSchema = z.object({
+  entityType: z.enum(["company", "investor"]),
+});
+
+// Investor form schema (keeping this for reference)
 const investorFormSchema = z.object({
   // Step 1: Basic Information
   name: z.string().min(2, "Investor name must be at least 2 characters"),
@@ -1691,40 +1771,54 @@ const investorFormSchema = z.object({
   // Step 4: Documents & Additional Info
   amountRaised: z.number().nonnegative().optional(),
   businessRegistrationDocuments: z.string().optional(),
-  profileDocuments: z.string().optional(),
+  investmentBroucher: z.string().optional(),
   goalExpected: z.string().optional(),
-});
-
-// NGO form schema (placeholder)
-const ngoFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  type: z.string().optional(),
-  // Add more fields as needed
 });
 
 type EntityType = z.infer<typeof entityTypeSchema>["entityType"];
 type CompanyFormData = z.infer<typeof companyFormSchema>;
 type InvestorFormData = z.infer<typeof investorFormSchema>;
-type NGOFormData = z.infer<typeof ngoFormSchema>;
+
+// Turnover ranges
+const turnoverRanges = [
+  "Less than $10,000",
+  "$10,000 - $50,000",
+  "$50,000 - $100,000",
+  "$100,000 - $500,000",
+  "$500,000 - $1 million",
+  "$1 million - $5 million",
+  "More than $5 million",
+];
 
 export default function OnboardingPage() {
   const { user } = useUser();
   const router = useRouter();
   const { addCompany, loading: companyLoading } = useCompany();
   const { addInvestor, loading: investorLoading } = useInvestor();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [entityType, setEntityType] = useState<EntityType | null>(null);
   const [step, setStep] = useState(0); // 0 = entity selection, 1+ = form steps
   const [socialLinks, setSocialLinks] = useState([{ name: "", link: "" }]);
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
-  const totalSteps = 11;
+  const [totalSteps] = useState(11); // Increased to 11 steps for company form
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
+  const [formProgress, setFormProgress] = useState(0);
 
-  // Company form
+  // Load saved progress on component mount
+  useEffect(() => {
+    loadProgress();
+  }, []);
+
+  // Company form with enhanced default values
   const companyForm = useForm<CompanyFormData>({
     resolver: zodResolver(companyFormSchema),
     defaultValues: {
       name: "",
       sector: "",
+      otherSector: "",
       type: "",
       stage: "",
       email: "",
@@ -1741,57 +1835,47 @@ export default function OnboardingPage() {
       fundingStatus: "",
       amountRaised: undefined,
       fundingNeeded: undefined,
-      foundingDocuments: "",
+      fundingDocuments: "",
       pitchDeck: "",
-      // General Business Information
       headOfficeAddress: "",
-      businessPhone: "",
-      businessDescription: "",
-      isYouthLed: false,
-      isWomanLed: false,
-
-      // Ownership & Management
+      businessModel: "B2B",
+      otherBusinessModel: "",
+      isYouthLed: "No",
+      isWomanLed: "No",
       founderName: "",
-      founderGender: undefined,
+      founderGender: "Prefer not to say",
       founderDob: undefined,
-      founderEducation: undefined,
-
-      // Tax Compliance
+      founderEducation: "University",
       taxCompliance: [],
-      sectorLicenses: undefined,
-      intellectualProperty: false,
-
-      // Financial & Banking
-      annualTurnover: "",
-      businessBankAccount: false,
+      sectorLicenses: "No, I do not require",
+      hasIntellectualProperty: "No",
+      annualTurnoverBefore: "",
+      annualTurnoverCurrent: "",
+      annualTurnoverNext: "",
+      hasBusinessBankAccount: "No",
       externalFunding: [],
-      financialRecords: false,
-
-      // Innovation & Digital Tools
-      usesDigitalTools: false,
+      otherExternalFunding: "",
+      keepsFinancialRecords: "No",
+      usesDigitalTools: "No",
       digitalTools: [],
-      isInnovative: false,
-      innovationDescription: "",
-
-      // Challenges
+      otherDigitalTools: "",
+      isInnovative: "No",
+      innovationExplanation: "",
       businessChallenges: [],
+      otherBusinessChallenges: "",
       supportNeeded: "",
-      planToExpand: false,
+      planningExpansion: "No",
       expansionPlans: "",
-
-      // Social & Environmental Impact
-      employsVulnerableGroups: false,
-      addressesEnvironmentalSustainability: false,
+      employsVulnerableGroups: "No",
+      addressesEnvironmentalSustainability: "No",
       impactInitiatives: "",
-
-      // Consent & Follow Up
-      joinEcosystemPrograms: false,
-      agreeToDataStorage: false,
+      joinEcosystemPrograms: "No",
+      consentToDataUsage: "No",
       additionalComments: "",
     },
   });
 
-  // Investor form
+  // Investor form (keeping this for reference)
   const investorForm = useForm<InvestorFormData>({
     resolver: zodResolver(investorFormSchema),
     defaultValues: {
@@ -1811,19 +1895,52 @@ export default function OnboardingPage() {
       stage: "",
       amountRaised: undefined,
       businessRegistrationDocuments: "",
-      profileDocuments: "",
+      investmentBroucher: "",
       goalExpected: "",
     },
   });
 
-  // NGO form (placeholder)
-  const ngoForm = useForm<NGOFormData>({
-    resolver: zodResolver(ngoFormSchema),
-    defaultValues: {
-      name: "",
-      type: "",
-    },
-  });
+  // Watch for form values to conditionally show/hide fields
+  const selectedSector = companyForm.watch("sector");
+  const selectedBusinessModel = companyForm.watch("businessModel");
+  const usesDigitalToolsValue = companyForm.watch("usesDigitalTools");
+  const isInnovativeValue = companyForm.watch("isInnovative");
+  const planningExpansionValue = companyForm.watch("planningExpansion");
+  const externalFundingValues = companyForm.watch("externalFunding");
+  const businessChallengesValues = companyForm.watch("businessChallenges");
+  const digitalToolsValues = companyForm.watch("digitalTools");
+
+  // Calculate form progress
+  // Remove the existing useEffect for form progress calculation that looks like this:
+  // useEffect(() => {
+  //   if (entityType === "company") {
+  //     const formValues = companyForm.getValues()
+  //     const totalFields = Object.keys(formValues).length
+  //     let filledFields = 0
+
+  //     Object.entries(formValues).forEach(([key, value]) => {
+  //       if (value !== undefined && value !== "" && value !== null && !(Array.isArray(value) && value.length === 0)) {
+  //         filledFields++
+  //       }
+  //     })
+
+  //     const progress = Math.round((filledFields / totalFields) * 100)
+  //     setFormProgress(progress)
+  //   }
+  // }, [companyForm.watch(), entityType])
+
+  // And replace it with this simpler calculation that's based on the current step:
+  useEffect(() => {
+    if (entityType === "company") {
+      // Calculate progress based on current step (step 0 is entity selection)
+      const progress = step === 0 ? 0 : Math.round((step / totalSteps) * 100);
+      setFormProgress(progress);
+    } else if (entityType === "investor") {
+      // For investor form (4 steps)
+      const progress = step === 0 ? 0 : Math.round((step / 4) * 100);
+      setFormProgress(progress);
+    }
+  }, [step, totalSteps, entityType]);
 
   const selectEntityType = (type: EntityType) => {
     setEntityType(type);
@@ -1835,15 +1952,21 @@ export default function OnboardingPage() {
     if (entityType === "company") {
       if (step === 1) {
         companyForm
-          .trigger(["name", "sector", "type", "stage"])
+          .trigger(["name", "sector", "otherSector", "type", "stage"])
           .then((isValid) => {
-            if (isValid) setStep(step + 1);
+            if (isValid) {
+              setStep(step + 1);
+              saveProgress();
+            }
           });
       } else if (step === 2) {
         companyForm
           .trigger(["email", "phone", "address", "website"])
           .then((isValid) => {
-            if (isValid) setStep(step + 1);
+            if (isValid) {
+              setStep(step + 1);
+              saveProgress();
+            }
           });
       } else if (step === 3) {
         companyForm
@@ -1856,10 +1979,121 @@ export default function OnboardingPage() {
             "employeesRange",
           ])
           .then((isValid) => {
-            if (isValid) setStep(step + 1);
+            if (isValid) {
+              setStep(step + 1);
+              saveProgress();
+            }
+          });
+      } else if (step === 4) {
+        companyForm
+          .trigger([
+            "fundingStatus",
+            "amountRaised",
+            "fundingNeeded",
+            "fundingDocuments",
+            "pitchDeck",
+          ])
+          .then((isValid) => {
+            if (isValid) {
+              setStep(step + 1);
+              saveProgress();
+            }
+          });
+      } else if (step === 5) {
+        companyForm
+          .trigger([
+            "headOfficeAddress",
+            "businessModel",
+            "otherBusinessModel",
+            "isYouthLed",
+            "isWomanLed",
+          ])
+          .then((isValid) => {
+            if (isValid) {
+              setStep(step + 1);
+              saveProgress();
+            }
+          });
+      } else if (step === 6) {
+        companyForm
+          .trigger([
+            "founderName",
+            "founderGender",
+            "founderDob",
+            "founderEducation",
+            "taxCompliance",
+            "sectorLicenses",
+            "hasIntellectualProperty",
+          ])
+          .then((isValid) => {
+            if (isValid) {
+              setStep(step + 1);
+              saveProgress();
+            }
+          });
+      } else if (step === 7) {
+        companyForm
+          .trigger([
+            "annualTurnoverBefore",
+            "annualTurnoverCurrent",
+            "annualTurnoverNext",
+            "hasBusinessBankAccount",
+            "externalFunding",
+            "otherExternalFunding",
+            "keepsFinancialRecords",
+          ])
+          .then((isValid) => {
+            if (isValid) {
+              setStep(step + 1);
+              saveProgress();
+            }
+          });
+      } else if (step === 8) {
+        companyForm
+          .trigger([
+            "usesDigitalTools",
+            "digitalTools",
+            "otherDigitalTools",
+            "isInnovative",
+            "innovationExplanation",
+          ])
+          .then((isValid) => {
+            if (isValid) {
+              setStep(step + 1);
+              saveProgress();
+            }
+          });
+      } else if (step === 9) {
+        companyForm
+          .trigger([
+            "businessChallenges",
+            "otherBusinessChallenges",
+            "supportNeeded",
+            "planningExpansion",
+            "expansionPlans",
+          ])
+          .then((isValid) => {
+            if (isValid) {
+              setStep(step + 1);
+              saveProgress();
+            }
+          });
+      } else if (step === 10) {
+        companyForm
+          .trigger([
+            "employsVulnerableGroups",
+            "addressesEnvironmentalSustainability",
+            "impactInitiatives",
+          ])
+          .then((isValid) => {
+            if (isValid) {
+              setStep(step + 1);
+              saveProgress();
+            }
           });
       } else {
         setStep(Math.min(step + 1, totalSteps));
+        saveProgress();
       }
     } else if (entityType === "investor") {
       if (step === 1) {
@@ -1868,13 +2102,19 @@ export default function OnboardingPage() {
         investorForm
           .trigger(["name", "type", "sectorInterested"])
           .then((isValid) => {
-            if (isValid) setStep(step + 1);
+            if (isValid) {
+              setStep(step + 1);
+              saveProgress();
+            }
           });
       } else if (step === 2) {
         investorForm
           .trigger(["email", "phone", "address", "website"])
           .then((isValid) => {
-            if (isValid) setStep(step + 1);
+            if (isValid) {
+              setStep(step + 1);
+              saveProgress();
+            }
           });
       } else if (step === 3) {
         investorForm
@@ -1886,14 +2126,15 @@ export default function OnboardingPage() {
             "fundingCapacity",
           ])
           .then((isValid) => {
-            if (isValid) setStep(step + 1);
+            if (isValid) {
+              setStep(step + 1);
+              saveProgress();
+            }
           });
       } else {
-        setStep(Math.min(step + 1, totalSteps));
+        setStep(Math.min(step + 1, 4)); // Investor form has 4 steps
+        saveProgress();
       }
-    } else {
-      // For government and NGO, just proceed without validation for now
-      setStep(Math.min(step + 1, totalSteps));
     }
   };
 
@@ -1927,12 +2168,196 @@ export default function OnboardingPage() {
     }
   };
 
+  const removeSocialLink = (index: number) => {
+    const updatedLinks = [...socialLinks];
+    updatedLinks.splice(index, 1);
+    setSocialLinks(updatedLinks);
+
+    if (entityType === "company") {
+      companyForm.setValue("socialLinks", updatedLinks);
+    } else if (entityType === "investor") {
+      investorForm.setValue("socialLinks", updatedLinks);
+    }
+  };
+
   const toggleSector = (sector: string) => {
     setSelectedSectors((prev) =>
       prev.includes(sector)
         ? prev.filter((s) => s !== sector)
         : [...prev, sector]
     );
+  };
+
+  const clearProgress = () => {
+    localStorage.removeItem("onboarding_entityType");
+    localStorage.removeItem("onboarding_step");
+    localStorage.removeItem("onboarding_selectedSectors");
+    localStorage.removeItem("onboarding_socialLinks");
+    localStorage.removeItem("onboarding_companyData");
+    localStorage.removeItem("onboarding_investorData");
+  };
+
+  const saveProgressDebounced = debounce(() => {
+    saveProgress();
+  }, 1500); // Save after 1.5 seconds of inactivity
+
+  // Auto-save company form changes
+  useEffect(() => {
+    if (entityType === "company" && step > 0) {
+      saveProgressDebounced();
+    }
+
+    return () => {
+      saveProgressDebounced.cancel();
+    };
+  }, [companyForm.watch(), entityType, step]);
+
+  // Auto-save investor form changes
+  useEffect(() => {
+    if (entityType === "investor" && step > 0) {
+      saveProgressDebounced();
+    }
+
+    return () => {
+      saveProgressDebounced.cancel();
+    };
+  }, [investorForm.watch(), entityType, step]);
+
+  // Auto-save when sectors or social links change
+  useEffect(() => {
+    if (step > 0) {
+      saveProgressDebounced();
+    }
+
+    return () => {
+      saveProgressDebounced.cancel();
+    };
+  }, [selectedSectors, socialLinks, step]);
+
+  const saveProgress = () => {
+    try {
+      setIsSaving(true);
+
+      // Save entity type
+      localStorage.setItem("onboarding_entityType", entityType || "");
+
+      // Save current step
+      localStorage.setItem("onboarding_step", step.toString());
+
+      // Save selected sectors for investor
+      localStorage.setItem(
+        "onboarding_selectedSectors",
+        JSON.stringify(selectedSectors)
+      );
+
+      // Save social links
+      localStorage.setItem(
+        "onboarding_socialLinks",
+        JSON.stringify(socialLinks)
+      );
+
+      // Save form data based on entity type
+      if (entityType === "company") {
+        localStorage.setItem(
+          "onboarding_companyData",
+          JSON.stringify(companyForm.getValues())
+        );
+      } else if (entityType === "investor") {
+        localStorage.setItem(
+          "onboarding_investorData",
+          JSON.stringify(investorForm.getValues())
+        );
+      }
+
+      // Update last saved timestamp
+      const now = new Date();
+      setLastSaved(now);
+
+      // Only show toast for manual saves
+      if (saveProgressDebounced.flush) {
+        toast({
+          title: "Progress saved",
+          description: "You can continue from this point later.",
+        });
+      }
+
+      setTimeout(() => setIsSaving(false), 500);
+    } catch (error) {
+      console.error("Error saving progress:", error);
+      setIsSaving(false);
+      toast({
+        title: "Error",
+        description: "Failed to save progress",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const loadProgress = () => {
+    try {
+      // Load entity type
+      const savedEntityType = localStorage.getItem("onboarding_entityType");
+      if (savedEntityType) {
+        setEntityType(savedEntityType as EntityType);
+      }
+
+      // Load current step
+      const savedStep = localStorage.getItem("onboarding_step");
+      if (savedStep) {
+        setStep(Number.parseInt(savedStep, 10));
+      }
+
+      // Load selected sectors for investor
+      const savedSectors = localStorage.getItem("onboarding_selectedSectors");
+      if (savedSectors) {
+        setSelectedSectors(JSON.parse(savedSectors));
+      }
+
+      // Load social links
+      const savedSocialLinks = localStorage.getItem("onboarding_socialLinks");
+      if (savedSocialLinks) {
+        setSocialLinks(JSON.parse(savedSocialLinks));
+      }
+
+      // Load form data based on entity type
+      if (savedEntityType === "company") {
+        const savedCompanyData = localStorage.getItem("onboarding_companyData");
+        if (savedCompanyData) {
+          const parsedData = JSON.parse(savedCompanyData);
+
+          // Handle date conversion for foundedAt and founderDob
+          if (parsedData.foundedAt) {
+            parsedData.foundedAt = new Date(parsedData.foundedAt);
+          }
+          if (parsedData.founderDob) {
+            parsedData.founderDob = new Date(parsedData.founderDob);
+          }
+
+          companyForm.reset(parsedData);
+        }
+      } else if (savedEntityType === "investor") {
+        const savedInvestorData = localStorage.getItem(
+          "onboarding_investorData"
+        );
+        if (savedInvestorData) {
+          const parsedData = JSON.parse(savedInvestorData);
+
+          // Handle date conversion for foundedAt
+          if (parsedData.foundedAt) {
+            parsedData.foundedAt = new Date(parsedData.foundedAt);
+          }
+
+          investorForm.reset(parsedData);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading progress:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load saved progress",
+        variant: "destructive",
+      });
+    }
   };
 
   const onSubmit = async (data: any) => {
@@ -1948,6 +2373,11 @@ export default function OnboardingPage() {
         });
 
         if (result.success) {
+          clearProgress(); // Clear saved progress after successful submission
+          toast({
+            title: "Success!",
+            description: "Your company profile has been created successfully.",
+          });
           router.push(`/companies/${result.companyId}`);
         } else {
           toast({
@@ -1967,6 +2397,11 @@ export default function OnboardingPage() {
         });
 
         if (result.success) {
+          clearProgress(); // Clear saved progress after successful submission
+          toast({
+            title: "Success!",
+            description: "Your investor profile has been created successfully.",
+          });
           router.push(`/investors/${result.investorId}`);
         } else {
           toast({
@@ -1975,13 +2410,6 @@ export default function OnboardingPage() {
             variant: "destructive",
           });
         }
-      } else {
-        // For government and NGO, just show a success message for now
-        toast({
-          title: "Success",
-          description: `${entityType} profile created successfully!`,
-        });
-        router.push("/dashboard");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -2000,8 +2428,6 @@ export default function OnboardingPage() {
         return companyForm;
       case "investor":
         return investorForm;
-      case "ngo":
-        return ngoForm;
       default:
         return companyForm;
     }
@@ -2027,7 +2453,7 @@ export default function OnboardingPage() {
         : step === 8
         ? "Innovation & Digital Tools"
         : step === 9
-        ? "Challenges Faced"
+        ? "Challenges & Growth"
         : step === 10
         ? "Social & Environmental Impact"
         : "Consent & Follow Up";
@@ -2038,15 +2464,9 @@ export default function OnboardingPage() {
         ? "Contact Information"
         : step === 3
         ? "Investment Details"
-        : "Documents & Additional Info";
+        : "Describe your typical Requirements";
     } else {
-      return step === 1
-        ? "Basic Information"
-        : step === 2
-        ? "Contact Information"
-        : step === 3
-        ? "NGO Details"
-        : "Additional Information";
+      return "";
     }
   };
 
@@ -2062,18 +2482,18 @@ export default function OnboardingPage() {
         : step === 4
         ? "Share details about your company's financial situation"
         : step === 5
-        ? "Tell us about your business operations"
+        ? "Tell us about your business model and sector"
         : step === 6
-        ? "Information about the company's ownership and management"
+        ? "Information about the company's founder and compliance"
         : step === 7
-        ? "Details about your company's financial practices"
+        ? "Details about your company's financial status and banking"
         : step === 8
         ? "Tell us about your use of technology and innovation"
         : step === 9
-        ? "What challenges does your business face?"
+        ? "What challenges does your business face and how do you plan to grow?"
         : step === 10
         ? "Tell us about your social and environmental impact"
-        : "Final permissions and additional information";
+        : "Final steps and consent information";
     } else if (entityType === "investor") {
       return step === 1
         ? "Let's start with the essentials about your investment firm"
@@ -2083,20 +2503,23 @@ export default function OnboardingPage() {
         ? "Tell us more about your investment preferences"
         : "Share additional documents and information";
     } else {
-      return step === 1
-        ? "Let's start with the essentials about your ESO"
-        : step === 2
-        ? "How can people reach your organization?"
-        : step === 3
-        ? "Tell us more about your ESO's mission"
-        : "Share additional information";
+      return "";
     }
+  };
+
+  // Format currency for display
+  const formatCurrency = (amount: number | undefined) => {
+    if (amount === undefined) return "";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
   };
 
   const isLoading = companyLoading || investorLoading;
 
   return (
-    <div className=" py-10">
+    <div className="py-10">
       <div className="p-4 sm:p-6 lg:p-8">
         {step === 0 ? (
           // Entity Type Selection
@@ -2143,23 +2566,6 @@ export default function OnboardingPage() {
                     </p>
                   </CardContent>
                 </Card>
-
-                <Card
-                  className={cn(
-                    "cursor-pointer transition-all hover:border-primary",
-                    entityType === "ngo" && "border-2 border-primary"
-                  )}
-                  onClick={() => selectEntityType("ngo")}
-                >
-                  <CardHeader className="p-4">
-                    <CardTitle className="text-lg">NGO</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <p className="text-sm text-muted-foreground">
-                      For non-profit organizations and charities
-                    </p>
-                  </CardContent>
-                </Card>
               </div>
             </CardContent>
           </Card>
@@ -2170,18 +2576,33 @@ export default function OnboardingPage() {
               <h1 className="text-3xl font-bold">
                 {entityType === "company"
                   ? "Complete Your Company Profile"
-                  : entityType === "investor"
-                  ? "Complete Your Investor Profile"
-                  : "Complete Your NGO Profile"}
+                  : "Complete Your Investor Profile"}
               </h1>
               <p className="text-muted-foreground mt-2">
                 Let's get to know your {entityType} better. This information
                 will help us tailor our services to your needs.
               </p>
 
+              {/* Form progress */}
+              <div className="mt-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">
+                    {entityType === "company"
+                      ? `Step ${step} of ${totalSteps}`
+                      : entityType === "investor"
+                      ? `Step ${step} of 4`
+                      : ""}
+                  </span>
+                  <span className="text-sm font-medium">{formProgress}%</span>
+                </div>
+                <Progress value={formProgress} className="mt-2 h-2" />
+              </div>
+
               {/* Progress indicator */}
-              <div className="mt-8 flex justify-between">
-                {Array.from({ length: totalSteps }).map((_, index) => (
+              <div className="mt-8 hidden justify-between md:flex">
+                {Array.from({
+                  length: entityType === "company" ? totalSteps : 4,
+                }).map((_, index) => (
                   <div key={index} className="flex flex-col items-center">
                     <div
                       className={cn(
@@ -2201,30 +2622,52 @@ export default function OnboardingPage() {
                     </div>
                     <span
                       className={cn(
-                        "mt-2 text-sm",
+                        "mt-2 text-xs",
                         step === index + 1
                           ? "font-medium text-primary"
                           : "text-gray-500"
                       )}
                     >
-                      {index === 0
+                      {entityType === "company"
+                        ? index === 0
+                          ? "Basic Info"
+                          : index === 1
+                          ? "Contact"
+                          : index === 2
+                          ? "Details"
+                          : index === 3
+                          ? "Funding"
+                          : index === 4
+                          ? "Business Info"
+                          : index === 5
+                          ? "Ownership"
+                          : index === 6
+                          ? "Financial"
+                          : index === 7
+                          ? "Innovation"
+                          : index === 8
+                          ? "Challenges"
+                          : index === 9
+                          ? "Impact"
+                          : "Consent"
+                        : index === 0
                         ? "Basic Info"
                         : index === 1
                         ? "Contact"
                         : index === 2
-                        ? entityType === "company"
-                          ? "Details"
-                          : entityType === "investor"
-                          ? "Investment"
-                          : "Details"
-                        : entityType === "company"
-                        ? "Funding"
-                        : entityType === "investor"
-                        ? "Documents"
-                        : "Additional"}
+                        ? "Investment"
+                        : "Documents"}
                     </span>
                   </div>
                 ))}
+              </div>
+
+              {/* Mobile step indicator */}
+              <div className="mt-4 flex items-center justify-between md:hidden">
+                <span className="text-sm font-medium">
+                  Step {step} of {entityType === "company" ? totalSteps : 4}
+                </span>
+                <span className="text-sm font-medium">{getStepTitle()}</span>
               </div>
             </div>
 
@@ -2245,15 +2688,33 @@ export default function OnboardingPage() {
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label htmlFor="name">
-                              Company Name{" "}
-                              <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                              id="name"
-                              {...companyForm.register("name")}
-                              placeholder="Enter your company name"
-                            />
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor="name">
+                                Company Name{" "}
+                                <span className="text-red-500">*</span>
+                              </Label>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="w-80">
+                                      Enter your company's legal name as it
+                                      appears on official documents.
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Building2 className="h-4 w-4 text-muted-foreground" />
+                              <Input
+                                id="name"
+                                {...companyForm.register("name")}
+                                placeholder="Enter your company name"
+                              />
+                            </div>
                             {companyForm.formState.errors.name && (
                               <p className="text-sm text-red-500">
                                 {companyForm.formState.errors.name.message}
@@ -2283,6 +2744,7 @@ export default function OnboardingPage() {
                                     {sector.title}
                                   </SelectItem>
                                 ))}
+                                <SelectItem value="Other">Other</SelectItem>
                               </SelectContent>
                             </Select>
                             {companyForm.formState.errors.sector && (
@@ -2292,8 +2754,30 @@ export default function OnboardingPage() {
                             )}
                           </div>
 
+                          {selectedSector === "Other" && (
+                            <div className="space-y-2">
+                              <Label htmlFor="otherSector">
+                                Specify Sector{" "}
+                                <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="otherSector"
+                                {...companyForm.register("otherSector")}
+                                placeholder="Please specify your sector"
+                              />
+                              {companyForm.formState.errors.otherSector && (
+                                <p className="text-sm text-red-500">
+                                  {
+                                    companyForm.formState.errors.otherSector
+                                      .message
+                                  }
+                                </p>
+                              )}
+                            </div>
+                          )}
+
                           <div className="space-y-2">
-                            <Label htmlFor="type">Are you</Label>
+                            <Label htmlFor="type">Company Type</Label>
                             <Select
                               onValueChange={(value) =>
                                 companyForm.setValue("type", value)
@@ -2314,7 +2798,7 @@ export default function OnboardingPage() {
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="stage">Type of Rounds</Label>
+                            <Label htmlFor="stage">Company Stage</Label>
                             <Select
                               onValueChange={(value) =>
                                 companyForm.setValue("stage", value)
@@ -2322,7 +2806,7 @@ export default function OnboardingPage() {
                               defaultValue={companyForm.getValues("stage")}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Select your type of rounds" />
+                                <SelectValue placeholder="Select your company stage" />
                               </SelectTrigger>
                               <SelectContent>
                                 {companyStages.map((stage) => (
@@ -2330,6 +2814,11 @@ export default function OnboardingPage() {
                                     {stage}
                                   </SelectItem>
                                 ))}
+                                {!companyStages.includes("Series C") && (
+                                  <SelectItem value="Series C">
+                                    Series C
+                                  </SelectItem>
+                                )}
                               </SelectContent>
                             </Select>
                           </div>
@@ -2342,13 +2831,19 @@ export default function OnboardingPage() {
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label htmlFor="email">Email Address</Label>
-                            <Input
-                              id="email"
-                              type="email"
-                              {...companyForm.register("email")}
-                              placeholder="company@example.com"
-                            />
+                            <Label htmlFor="email">
+                              Email Address{" "}
+                              <span className="text-red-500">*</span>
+                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Mail className="h-4 w-4 text-muted-foreground" />
+                              <Input
+                                id="email"
+                                type="email"
+                                {...companyForm.register("email")}
+                                placeholder="company@example.com"
+                              />
+                            </div>
                             {companyForm.formState.errors.email && (
                               <p className="text-sm text-red-500">
                                 {companyForm.formState.errors.email.message}
@@ -2358,29 +2853,48 @@ export default function OnboardingPage() {
 
                           <div className="space-y-2">
                             <Label htmlFor="phone">Phone Number</Label>
-                            <Input
-                              id="phone"
-                              {...companyForm.register("phone")}
-                              placeholder="+1 (555) 123-4567"
-                            />
+                            <div className="flex items-center gap-2">
+                              <Phone className="h-4 w-4 text-muted-foreground" />
+                              <Input
+                                id="phone"
+                                {...companyForm.register("phone")}
+                                placeholder="+1 (555) 123-4567"
+                              />
+                            </div>
+                            {companyForm.formState.errors.phone && (
+                              <p className="text-sm text-red-500">
+                                {companyForm.formState.errors.phone.message}
+                              </p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
                             <Label htmlFor="address">Address</Label>
-                            <Textarea
-                              id="address"
-                              {...companyForm.register("address")}
-                              placeholder="123 Business St, City, Country"
-                            />
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                              <Textarea
+                                id="address"
+                                {...companyForm.register("address")}
+                                placeholder="123 Business St, City, Country"
+                              />
+                            </div>
+                            {companyForm.formState.errors.address && (
+                              <p className="text-sm text-red-500">
+                                {companyForm.formState.errors.address.message}
+                              </p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
                             <Label htmlFor="website">Website</Label>
-                            <Input
-                              id="website"
-                              {...companyForm.register("website")}
-                              placeholder="https://yourcompany.com"
-                            />
+                            <div className="flex items-center gap-2">
+                              <Globe className="h-4 w-4 text-muted-foreground" />
+                              <Input
+                                id="website"
+                                {...companyForm.register("website")}
+                                placeholder="https://yourcompany.com"
+                              />
+                            </div>
                             {companyForm.formState.errors.website && (
                               <p className="text-sm text-red-500">
                                 {companyForm.formState.errors.website.message}
@@ -2393,7 +2907,7 @@ export default function OnboardingPage() {
                             {socialLinks.map((link, index) => (
                               <div
                                 key={index}
-                                className="grid grid-cols-5 gap-2"
+                                className="grid grid-cols-6 gap-2"
                               >
                                 <Select
                                   onValueChange={(value) =>
@@ -2435,6 +2949,15 @@ export default function OnboardingPage() {
                                     )
                                   }
                                 />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => removeSocialLink(index)}
+                                  className="col-span-1"
+                                >
+                                  ✕
+                                </Button>
                               </div>
                             ))}
                             <Button
@@ -2443,7 +2966,7 @@ export default function OnboardingPage() {
                               size="sm"
                               onClick={addSocialLink}
                             >
-                              Add Another Social Link
+                              Add Social Link
                             </Button>
                           </div>
                         </div>
@@ -2497,12 +3020,13 @@ export default function OnboardingPage() {
                                     )
                                   }
                                   initialFocus
+                                  disabled={(date) => date > new Date()}
                                 />
                               </PopoverContent>
                             </Popover>
                           </div>
 
-                          {/* <div className="space-y-2">
+                          <div className="space-y-2">
                             <Label htmlFor="registrationNumber">
                               Registration Number
                             </Label>
@@ -2511,49 +3035,48 @@ export default function OnboardingPage() {
                               {...companyForm.register("registrationNumber")}
                               placeholder="Company registration number"
                             />
-                          </div> */}
-
-                          <div className="space-y-2">
-                            <Label htmlFor="registrationNumber">
-                              Registration Number
-                            </Label>
-                            <Input
-                              id="registrationNumber"
-                              {...companyForm.register("registrationNumber", {
-                                required: "Registration number is required",
-                                maxLength: {
-                                  value: 18,
-                                  message: "Must not exceed 18 characters",
-                                },
-                                pattern: {
-                                  value: /^[A-Z0-9\-]+$/i,
-                                  message:
-                                    "Only letters, numbers, and hyphens are allowed",
-                                },
-                              })}
-                              placeholder="Registration number most be up to 18 character"
-                            />
-                            {companyForm.formState.errors
-                              .registrationNumber && (
-                              <p className="text-red-500 text-sm">
-                                {
-                                  companyForm.formState.errors
-                                    .registrationNumber.message
-                                }
-                              </p>
-                            )}
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="description">
-                              Company Description
-                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor="description">
+                                Company Description
+                              </Label>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="w-80">
+                                      Provide a clear description of what your
+                                      company does, its products/services, and
+                                      target market.
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
                             <Textarea
                               id="description"
                               {...companyForm.register("description")}
                               placeholder="Describe what your company does..."
                               className="min-h-[100px]"
                             />
+                            {companyForm.formState.errors.description && (
+                              <p className="text-sm text-red-500">
+                                {
+                                  companyForm.formState.errors.description
+                                    .message
+                                }
+                              </p>
+                            )}
+                            <div className="flex justify-end">
+                              <p className="text-xs text-muted-foreground">
+                                {companyForm.watch("description")?.length || 0}
+                                /1000 characters
+                              </p>
+                            </div>
                           </div>
 
                           <div className="space-y-2">
@@ -2565,31 +3088,49 @@ export default function OnboardingPage() {
                               {...companyForm.register("missionStatement")}
                               placeholder="Your company's mission statement..."
                             />
+                            {companyForm.formState.errors.missionStatement && (
+                              <p className="text-sm text-red-500">
+                                {
+                                  companyForm.formState.errors.missionStatement
+                                    .message
+                                }
+                              </p>
+                            )}
+                            <div className="flex justify-end">
+                              <p className="text-xs text-muted-foreground">
+                                {companyForm.watch("missionStatement")
+                                  ?.length || 0}
+                                /500 characters
+                              </p>
+                            </div>
                           </div>
 
                           <div className="space-y-2">
                             <Label htmlFor="employeesRange">
                               Number of Employees
                             </Label>
-                            <Select
-                              onValueChange={(value) =>
-                                companyForm.setValue("employeesRange", value)
-                              }
-                              defaultValue={companyForm.getValues(
-                                "employeesRange"
-                              )}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select employee range" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {companyRanges.map((range) => (
-                                  <SelectItem key={range} value={range}>
-                                    {range}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-muted-foreground" />
+                              <Select
+                                onValueChange={(value) =>
+                                  companyForm.setValue("employeesRange", value)
+                                }
+                                defaultValue={companyForm.getValues(
+                                  "employeesRange"
+                                )}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select employee range" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {companyRanges.map((range) => (
+                                    <SelectItem key={range} value={range}>
+                                      {range}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </div>
                         </div>
                       </>
@@ -2618,6 +3159,11 @@ export default function OnboardingPage() {
                                     {status}
                                   </SelectItem>
                                 ))}
+                                {!fundingStatus.includes("Series C") && (
+                                  <SelectItem value="Series C">
+                                    Series C
+                                  </SelectItem>
+                                )}
                               </SelectContent>
                             </Select>
                           </div>
@@ -2635,6 +3181,14 @@ export default function OnboardingPage() {
                               })}
                               placeholder="0"
                             />
+                            {companyForm.formState.errors.amountRaised && (
+                              <p className="text-sm text-red-500">
+                                {
+                                  companyForm.formState.errors.amountRaised
+                                    .message
+                                }
+                              </p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
@@ -2650,29 +3204,37 @@ export default function OnboardingPage() {
                               })}
                               placeholder="0"
                             />
+                            {companyForm.formState.errors.fundingNeeded && (
+                              <p className="text-sm text-red-500">
+                                {
+                                  companyForm.formState.errors.fundingNeeded
+                                    .message
+                                }
+                              </p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="foundingDocuments">
-                              Founding Documents
+                            <Label htmlFor="fundingDocuments">
+                              Funding Documents (Investment Plan)
                             </Label>
                             <Input
-                              id="foundingDocuments"
+                              id="fundingDocuments"
                               type="file"
                               className="cursor-pointer"
+                              accept=".pdf"
                               onChange={(e) => {
                                 if (e.target.files?.[0]) {
                                   // In a real app, you'd upload this to storage and save the URL
                                   companyForm.setValue(
-                                    "foundingDocuments",
+                                    "fundingDocuments",
                                     e.target.files[0].name
                                   );
                                 }
                               }}
                             />
                             <p className="text-xs text-muted-foreground">
-                              Upload incorporation documents, business licenses,
-                              etc.
+                              PDF files only
                             </p>
                           </div>
 
@@ -2714,128 +3276,135 @@ export default function OnboardingPage() {
                               {...companyForm.register("headOfficeAddress")}
                               placeholder="Enter your head office address"
                             />
+                            {companyForm.formState.errors.headOfficeAddress && (
+                              <p className="text-sm text-red-500">
+                                {
+                                  companyForm.formState.errors.headOfficeAddress
+                                    .message
+                                }
+                              </p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="businessPhone">Phone</Label>
-                            <Input
-                              id="businessPhone"
-                              {...companyForm.register("businessPhone")}
-                              placeholder="Enter your business phone number"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="businessDescription">
-                              Brief Description of Business Activities{" "}
+                            <Label htmlFor="businessModel">
+                              What is your business model{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <Textarea
-                              id="businessDescription"
-                              {...companyForm.register("businessDescription")}
-                              placeholder="Describe your business activities"
-                              className="min-h-[100px]"
-                            />
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "businessModel",
+                                  value as "B2B" | "B2C" | "B2G" | "Other"
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "businessModel"
+                              )}
+                              className="flex flex-col space-y-1"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="B2B" id="b2b" />
+                                <Label htmlFor="b2b">B2B</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="B2C" id="b2c" />
+                                <Label htmlFor="b2c">B2C</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="B2G" id="b2g" />
+                                <Label htmlFor="b2g">B2G</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem
+                                  value="Other"
+                                  id="other-business-model"
+                                />
+                                <Label htmlFor="other-business-model">
+                                  Other
+                                </Label>
+                              </div>
+                            </RadioGroup>
+                            {companyForm.formState.errors.businessModel && (
+                              <p className="text-sm text-red-500">
+                                {
+                                  companyForm.formState.errors.businessModel
+                                    .message
+                                }
+                              </p>
+                            )}
                           </div>
 
+                          {selectedBusinessModel === "Other" && (
+                            <div className="space-y-2">
+                              <Label htmlFor="otherBusinessModel">
+                                Specify Business Model{" "}
+                                <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="otherBusinessModel"
+                                {...companyForm.register("otherBusinessModel")}
+                                placeholder="Please specify your business model"
+                              />
+                            </div>
+                          )}
+
                           <div className="space-y-2">
-                            <Label>
+                            <Label htmlFor="isYouthLed">
                               Is your business youth-led (under 35)?{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex items-center space-x-4">
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "isYouthLed",
+                                  value as "Yes" | "No"
+                                )
+                              }
+                              defaultValue={companyForm.getValues("isYouthLed")}
+                              className="flex space-x-4"
+                            >
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="youthLedYes"
-                                  name="isYouthLed"
-                                  checked={
-                                    companyForm.getValues("isYouthLed") === true
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue("isYouthLed", true)
-                                  }
+                                <RadioGroupItem
+                                  value="Yes"
+                                  id="youth-led-yes"
                                 />
-                                <Label
-                                  htmlFor="youthLedYes"
-                                  className="font-normal"
-                                >
-                                  Yes
-                                </Label>
+                                <Label htmlFor="youth-led-yes">Yes</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="youthLedNo"
-                                  name="isYouthLed"
-                                  checked={
-                                    companyForm.getValues("isYouthLed") ===
-                                    false
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue("isYouthLed", false)
-                                  }
-                                />
-                                <Label
-                                  htmlFor="youthLedNo"
-                                  className="font-normal"
-                                >
-                                  No
-                                </Label>
+                                <RadioGroupItem value="No" id="youth-led-no" />
+                                <Label htmlFor="youth-led-no">No</Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
 
                           <div className="space-y-2">
-                            <Label>
+                            <Label htmlFor="isWomanLed">
                               Is your business woman-led?{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex items-center space-x-4">
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "isWomanLed",
+                                  value as "Yes" | "No"
+                                )
+                              }
+                              defaultValue={companyForm.getValues("isWomanLed")}
+                              className="flex space-x-4"
+                            >
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="womanLedYes"
-                                  name="isWomanLed"
-                                  checked={
-                                    companyForm.getValues("isWomanLed") === true
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue("isWomanLed", true)
-                                  }
+                                <RadioGroupItem
+                                  value="Yes"
+                                  id="woman-led-yes"
                                 />
-                                <Label
-                                  htmlFor="womanLedYes"
-                                  className="font-normal"
-                                >
-                                  Yes
-                                </Label>
+                                <Label htmlFor="woman-led-yes">Yes</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="womanLedNo"
-                                  name="isWomanLed"
-                                  checked={
-                                    companyForm.getValues("isWomanLed") ===
-                                    false
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue("isWomanLed", false)
-                                  }
-                                />
-                                <Label
-                                  htmlFor="womanLedNo"
-                                  className="font-normal"
-                                >
-                                  No
-                                </Label>
+                                <RadioGroupItem value="No" id="woman-led-no" />
+                                <Label htmlFor="woman-led-no">No</Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
                         </div>
                       </>
@@ -2855,87 +3424,57 @@ export default function OnboardingPage() {
                               {...companyForm.register("founderName")}
                               placeholder="Enter founder's name"
                             />
+                            {companyForm.formState.errors.founderName && (
+                              <p className="text-sm text-red-500">
+                                {
+                                  companyForm.formState.errors.founderName
+                                    .message
+                                }
+                              </p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
-                            <Label>
+                            <Label htmlFor="founderGender">
                               Gender of Founder{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex flex-col space-y-2">
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "founderGender",
+                                  value as
+                                    | "Male"
+                                    | "Female"
+                                    | "Prefer not to say"
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "founderGender"
+                              )}
+                              className="flex space-x-4"
+                            >
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="genderMale"
-                                  name="founderGender"
-                                  checked={
-                                    companyForm.getValues("founderGender") ===
-                                    "male"
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "founderGender",
-                                      "male"
-                                    )
-                                  }
-                                />
-                                <Label
-                                  htmlFor="genderMale"
-                                  className="font-normal"
-                                >
-                                  Male
-                                </Label>
+                                <RadioGroupItem value="Male" id="gender-male" />
+                                <Label htmlFor="gender-male">Male</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="genderFemale"
-                                  name="founderGender"
-                                  checked={
-                                    companyForm.getValues("founderGender") ===
-                                    "female"
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "founderGender",
-                                      "female"
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="Female"
+                                  id="gender-female"
                                 />
-                                <Label
-                                  htmlFor="genderFemale"
-                                  className="font-normal"
-                                >
-                                  Female
-                                </Label>
+                                <Label htmlFor="gender-female">Female</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="genderPreferNotToSay"
-                                  name="founderGender"
-                                  checked={
-                                    companyForm.getValues("founderGender") ===
-                                    "prefer_not_to_say"
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "founderGender",
-                                      "prefer_not_to_say"
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="Prefer not to say"
+                                  id="gender-prefer-not-say"
                                 />
-                                <Label
-                                  htmlFor="genderPreferNotToSay"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="gender-prefer-not-say">
                                   Prefer not to say
                                 </Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
 
                           <div className="space-y-2">
@@ -2975,9 +3514,18 @@ export default function OnboardingPage() {
                                     )
                                   }
                                   initialFocus
+                                  disabled={(date) => date > new Date()}
                                 />
                               </PopoverContent>
                             </Popover>
+                            {companyForm.formState.errors.founderDob && (
+                              <p className="text-sm text-red-500">
+                                {
+                                  companyForm.formState.errors.founderDob
+                                    .message
+                                }
+                              </p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
@@ -2989,15 +3537,7 @@ export default function OnboardingPage() {
                               onValueChange={(value) =>
                                 companyForm.setValue(
                                   "founderEducation",
-                                  value as
-                                    | "primary"
-                                    | "secondary"
-                                    | "tertiary"
-                                    | "technical_vocational"
-                                    | "university"
-                                    | "post_graduate"
-                                    | "other"
-                                    | undefined
+                                  value as any
                                 )
                               }
                               defaultValue={companyForm.getValues(
@@ -3005,230 +3545,203 @@ export default function OnboardingPage() {
                               )}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Select educational background" />
+                                <SelectValue placeholder="Select education level" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="primary">Primary</SelectItem>
-                                <SelectItem value="secondary">
+                                <SelectItem value="Primary">Primary</SelectItem>
+                                <SelectItem value="Secondary">
                                   Secondary
                                 </SelectItem>
-                                <SelectItem value="tertiary">
+                                <SelectItem value="Tertiary">
                                   Tertiary
                                 </SelectItem>
-                                <SelectItem value="technical_vocational">
-                                  Technical/Vocational
+                                <SelectItem value="Technical/vocational">
+                                  Technical/vocational
                                 </SelectItem>
-                                <SelectItem value="university">
+                                <SelectItem value="University">
                                   University
                                 </SelectItem>
-                                <SelectItem value="post_graduate">
+                                <SelectItem value="Post Graduate">
                                   Post Graduate
                                 </SelectItem>
-                                <SelectItem value="other">Other</SelectItem>
+                                <SelectItem value="Informal">
+                                  Informal
+                                </SelectItem>
+                                <SelectItem value="None">None</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
 
                           <div className="space-y-2">
-                            <Label>
-                              Tax Compliance and Nassit Compliance{" "}
+                            <Label htmlFor="taxCompliance">
+                              Tax and Nassit Compliance{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex flex-col space-y-2">
+                            <div className="grid grid-cols-1 gap-2">
                               <div className="flex items-center space-x-2">
                                 <Checkbox
-                                  id="taxNRA"
+                                  id="nra-registration"
                                   checked={companyForm
-                                    .getValues("taxCompliance")
-                                    ?.includes("nra")}
+                                    .watch("taxCompliance")
+                                    ?.includes("NRA registration")}
                                   onCheckedChange={(checked) => {
                                     const current =
-                                      companyForm.getValues("taxCompliance") ||
-                                      [];
+                                      companyForm.watch("taxCompliance") || [];
                                     if (checked) {
                                       companyForm.setValue("taxCompliance", [
                                         ...current,
-                                        "nra",
-                                      ]);
-                                    } else {
-                                      companyForm.setValue(
-                                        "taxCompliance",
-                                        current.filter((item) => item !== "nra")
-                                      );
-                                    }
-                                  }}
-                                />
-                                <Label htmlFor="taxNRA" className="font-normal">
-                                  NRA Registration
-                                </Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  id="taxNassit"
-                                  checked={companyForm
-                                    .getValues("taxCompliance")
-                                    ?.includes("nassit")}
-                                  onCheckedChange={(checked) => {
-                                    const current =
-                                      companyForm.getValues("taxCompliance") ||
-                                      [];
-                                    if (checked) {
-                                      companyForm.setValue("taxCompliance", [
-                                        ...current,
-                                        "nassit",
-                                      ]);
+                                        "NRA registration",
+                                      ] as any);
                                     } else {
                                       companyForm.setValue(
                                         "taxCompliance",
                                         current.filter(
-                                          (item) => item !== "nassit"
-                                        )
+                                          (item) => item !== "NRA registration"
+                                        ) as any
                                       );
                                     }
                                   }}
                                 />
-                                <Label
-                                  htmlFor="taxNassit"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="nra-registration">
+                                  NRA registration
+                                </Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id="nassit-registration"
+                                  checked={companyForm
+                                    .watch("taxCompliance")
+                                    ?.includes("Nassit Registration")}
+                                  onCheckedChange={(checked) => {
+                                    const current =
+                                      companyForm.watch("taxCompliance") || [];
+                                    if (checked) {
+                                      companyForm.setValue("taxCompliance", [
+                                        ...current,
+                                        "Nassit Registration",
+                                      ] as any);
+                                    } else {
+                                      companyForm.setValue(
+                                        "taxCompliance",
+                                        current.filter(
+                                          (item) =>
+                                            item !== "Nassit Registration"
+                                        ) as any
+                                      );
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor="nassit-registration">
                                   Nassit Registration
+                                </Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id="none-of-above"
+                                  checked={companyForm
+                                    .watch("taxCompliance")
+                                    ?.includes("None of the above")}
+                                  onCheckedChange={(checked) => {
+                                    const current =
+                                      companyForm.watch("taxCompliance") || [];
+                                    if (checked) {
+                                      companyForm.setValue("taxCompliance", [
+                                        "None of the above",
+                                      ] as any);
+                                    } else {
+                                      companyForm.setValue(
+                                        "taxCompliance",
+                                        current.filter(
+                                          (item) => item !== "None of the above"
+                                        ) as any
+                                      );
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor="none-of-above">
+                                  None of the above
                                 </Label>
                               </div>
                             </div>
                           </div>
 
                           <div className="space-y-2">
-                            <Label>
+                            <Label htmlFor="sectorLicenses">
                               Do you hold / require sector specific licenses?{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex flex-col space-y-2">
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "sectorLicenses",
+                                  value as
+                                    | "Yes, I hold"
+                                    | "Yes, but I do not hold"
+                                    | "No, I do not require"
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "sectorLicenses"
+                              )}
+                              className="flex flex-col space-y-1"
+                            >
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="licenseYesHold"
-                                  name="sectorLicenses"
-                                  checked={
-                                    companyForm.getValues("sectorLicenses") ===
-                                    "yes_hold"
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "sectorLicenses",
-                                      "yes_hold"
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="Yes, I hold"
+                                  id="license-yes-hold"
                                 />
-                                <Label
-                                  htmlFor="licenseYesHold"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="license-yes-hold">
                                   Yes, I hold
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="licenseYesNotHold"
-                                  name="sectorLicenses"
-                                  checked={
-                                    companyForm.getValues("sectorLicenses") ===
-                                    "yes_not_hold"
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "sectorLicenses",
-                                      "yes_not_hold"
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="Yes, but I do not hold"
+                                  id="license-yes-not-hold"
                                 />
-                                <Label
-                                  htmlFor="licenseYesNotHold"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="license-yes-not-hold">
                                   Yes, but I do not hold
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="licenseNotRequired"
-                                  name="sectorLicenses"
-                                  checked={
-                                    companyForm.getValues("sectorLicenses") ===
-                                    "not_required"
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "sectorLicenses",
-                                      "not_required"
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="No, I do not require"
+                                  id="license-no"
                                 />
-                                <Label
-                                  htmlFor="licenseNotRequired"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="license-no">
                                   No, I do not require
                                 </Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
 
                           <div className="space-y-2">
-                            <Label>
+                            <Label htmlFor="hasIntellectualProperty">
                               Do you hold any Intellectual Property Rights
-                              (Patents, Trademarks)
+                              (Patents, Trademarks)?{" "}
+                              <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex items-center space-x-4">
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "hasIntellectualProperty",
+                                  value as "Yes" | "No"
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "hasIntellectualProperty"
+                              )}
+                              className="flex space-x-4"
+                            >
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="ipYes"
-                                  name="intellectualProperty"
-                                  checked={
-                                    companyForm.getValues(
-                                      "intellectualProperty"
-                                    ) === true
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "intellectualProperty",
-                                      true
-                                    )
-                                  }
-                                />
-                                <Label htmlFor="ipYes" className="font-normal">
-                                  Yes
-                                </Label>
+                                <RadioGroupItem value="Yes" id="ip-yes" />
+                                <Label htmlFor="ip-yes">Yes</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="ipNo"
-                                  name="intellectualProperty"
-                                  checked={
-                                    companyForm.getValues(
-                                      "intellectualProperty"
-                                    ) === false
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "intellectualProperty",
-                                      false
-                                    )
-                                  }
-                                />
-                                <Label htmlFor="ipNo" className="font-normal">
-                                  No
-                                </Label>
+                                <RadioGroupItem value="No" id="ip-no" />
+                                <Label htmlFor="ip-no">No</Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
                         </div>
                       </>
@@ -3239,396 +3752,438 @@ export default function OnboardingPage() {
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label htmlFor="annualTurnover">
+                            <Label htmlFor="annualTurnoverBefore">
+                              Annual Turnover Before{" "}
+                              <span className="text-red-500">*</span>
+                            </Label>
+                            <Select
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "annualTurnoverBefore",
+                                  value
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "annualTurnoverBefore"
+                              )}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select turnover range" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {turnoverRanges.map((range) => (
+                                  <SelectItem key={range} value={range}>
+                                    {range}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {companyForm.formState.errors
+                              .annualTurnoverBefore && (
+                              <p className="text-sm text-red-500">
+                                {
+                                  companyForm.formState.errors
+                                    .annualTurnoverBefore.message
+                                }
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="annualTurnoverCurrent">
                               Annual Turnover (Estimate){" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <Input
-                              id="annualTurnover"
-                              {...companyForm.register("annualTurnover")}
-                              placeholder="Enter estimated annual turnover"
-                            />
+                            <Select
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "annualTurnoverCurrent",
+                                  value
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "annualTurnoverCurrent"
+                              )}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select turnover range" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {turnoverRanges.map((range) => (
+                                  <SelectItem key={range} value={range}>
+                                    {range}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {companyForm.formState.errors
+                              .annualTurnoverCurrent && (
+                              <p className="text-sm text-red-500">
+                                {
+                                  companyForm.formState.errors
+                                    .annualTurnoverCurrent.message
+                                }
+                              </p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
-                            <Label>
+                            <Label htmlFor="annualTurnoverNext">
+                              Annual Turnover in the coming year (Estimate){" "}
+                              <span className="text-red-500">*</span>
+                            </Label>
+                            <Select
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "annualTurnoverNext",
+                                  value
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "annualTurnoverNext"
+                              )}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select turnover range" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {turnoverRanges.map((range) => (
+                                  <SelectItem key={range} value={range}>
+                                    {range}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {companyForm.formState.errors
+                              .annualTurnoverNext && (
+                              <p className="text-sm text-red-500">
+                                {
+                                  companyForm.formState.errors
+                                    .annualTurnoverNext.message
+                                }
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="hasBusinessBankAccount">
                               Do you have a business bank account?{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex items-center space-x-4">
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "hasBusinessBankAccount",
+                                  value as "Yes" | "No"
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "hasBusinessBankAccount"
+                              )}
+                              className="flex space-x-4"
+                            >
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="bankYes"
-                                  name="businessBankAccount"
-                                  checked={
-                                    companyForm.getValues(
-                                      "businessBankAccount"
-                                    ) === true
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "businessBankAccount",
-                                      true
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="Yes"
+                                  id="bank-account-yes"
                                 />
-                                <Label
-                                  htmlFor="bankYes"
-                                  className="font-normal"
-                                >
-                                  Yes
-                                </Label>
+                                <Label htmlFor="bank-account-yes">Yes</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="bankNo"
-                                  name="businessBankAccount"
-                                  checked={
-                                    companyForm.getValues(
-                                      "businessBankAccount"
-                                    ) === false
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "businessBankAccount",
-                                      false
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="No"
+                                  id="bank-account-no"
                                 />
-                                <Label htmlFor="bankNo" className="font-normal">
-                                  No
-                                </Label>
+                                <Label htmlFor="bank-account-no">No</Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
 
                           <div className="space-y-2">
-                            <Label>
+                            <Label htmlFor="externalFunding">
                               Have you accessed any external funding?{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                               <div className="flex items-center space-x-2">
                                 <Checkbox
-                                  id="fundingNone"
+                                  id="funding-friends-family"
                                   checked={companyForm
-                                    .getValues("externalFunding")
-                                    ?.includes("none")}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      companyForm.setValue("externalFunding", [
-                                        "none",
-                                      ]);
-                                    } else {
-                                      companyForm.setValue(
-                                        "externalFunding",
-                                        []
-                                      );
-                                    }
-                                  }}
-                                />
-                                <Label
-                                  htmlFor="fundingNone"
-                                  className="font-normal"
-                                >
-                                  None
-                                </Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  id="fundingGrants"
-                                  checked={companyForm
-                                    .getValues("externalFunding")
-                                    ?.includes("grants")}
+                                    .watch("externalFunding")
+                                    ?.includes("Friends/family")}
                                   onCheckedChange={(checked) => {
                                     const current =
-                                      companyForm.getValues(
-                                        "externalFunding"
-                                      ) || [];
+                                      companyForm.watch("externalFunding") ||
+                                      [];
                                     if (checked) {
-                                      const newValue = current.filter(
-                                        (item) => item !== "none"
-                                      );
                                       companyForm.setValue("externalFunding", [
-                                        ...newValue,
-                                        "grants",
-                                      ]);
+                                        ...current,
+                                        "Friends/family",
+                                      ] as any);
                                     } else {
                                       companyForm.setValue(
                                         "externalFunding",
                                         current.filter(
-                                          (item) => item !== "grants"
-                                        )
+                                          (item) => item !== "Friends/family"
+                                        ) as any
                                       );
                                     }
                                   }}
                                 />
-                                <Label
-                                  htmlFor="fundingGrants"
-                                  className="font-normal"
-                                >
-                                  Grants
+                                <Label htmlFor="funding-friends-family">
+                                  Friends/family
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Checkbox
-                                  id="fundingLoans"
+                                  id="funding-angel"
                                   checked={companyForm
-                                    .getValues("externalFunding")
-                                    ?.includes("loans")}
+                                    .watch("externalFunding")
+                                    ?.includes("Angel Investment")}
                                   onCheckedChange={(checked) => {
                                     const current =
-                                      companyForm.getValues(
-                                        "externalFunding"
-                                      ) || [];
+                                      companyForm.watch("externalFunding") ||
+                                      [];
                                     if (checked) {
-                                      const newValue = current.filter(
-                                        (item) => item !== "none"
-                                      );
                                       companyForm.setValue("externalFunding", [
-                                        ...newValue,
-                                        "loans",
-                                      ]);
+                                        ...current,
+                                        "Angel Investment",
+                                      ] as any);
                                     } else {
                                       companyForm.setValue(
                                         "externalFunding",
                                         current.filter(
-                                          (item) => item !== "loans"
-                                        )
+                                          (item) => item !== "Angel Investment"
+                                        ) as any
                                       );
                                     }
                                   }}
                                 />
-                                <Label
-                                  htmlFor="fundingLoans"
-                                  className="font-normal"
-                                >
-                                  Loans
-                                </Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  id="fundingAngel"
-                                  checked={companyForm
-                                    .getValues("externalFunding")
-                                    ?.includes("angel")}
-                                  onCheckedChange={(checked) => {
-                                    const current =
-                                      companyForm.getValues(
-                                        "externalFunding"
-                                      ) || [];
-                                    if (checked) {
-                                      const newValue = current.filter(
-                                        (item) => item !== "none"
-                                      );
-                                      companyForm.setValue("externalFunding", [
-                                        ...newValue,
-                                        "angel",
-                                      ]);
-                                    } else {
-                                      companyForm.setValue(
-                                        "externalFunding",
-                                        current.filter(
-                                          (item) => item !== "angel"
-                                        )
-                                      );
-                                    }
-                                  }}
-                                />
-                                <Label
-                                  htmlFor="fundingAngel"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="funding-angel">
                                   Angel Investment
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Checkbox
-                                  id="fundingVC"
+                                  id="funding-grants"
                                   checked={companyForm
-                                    .getValues("externalFunding")
-                                    ?.includes("vc")}
+                                    .watch("externalFunding")
+                                    ?.includes("Grants")}
                                   onCheckedChange={(checked) => {
                                     const current =
-                                      companyForm.getValues(
-                                        "externalFunding"
-                                      ) || [];
+                                      companyForm.watch("externalFunding") ||
+                                      [];
                                     if (checked) {
-                                      const newValue = current.filter(
-                                        (item) => item !== "none"
-                                      );
                                       companyForm.setValue("externalFunding", [
-                                        ...newValue,
-                                        "vc",
-                                      ]);
+                                        ...current,
+                                        "Grants",
+                                      ] as any);
                                     } else {
                                       companyForm.setValue(
                                         "externalFunding",
-                                        current.filter((item) => item !== "vc")
+                                        current.filter(
+                                          (item) => item !== "Grants"
+                                        ) as any
                                       );
                                     }
                                   }}
                                 />
-                                <Label
-                                  htmlFor="fundingVC"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="funding-grants">Grants</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id="funding-vc"
+                                  checked={companyForm
+                                    .watch("externalFunding")
+                                    ?.includes("Venture Capital")}
+                                  onCheckedChange={(checked) => {
+                                    const current =
+                                      companyForm.watch("externalFunding") ||
+                                      [];
+                                    if (checked) {
+                                      companyForm.setValue("externalFunding", [
+                                        ...current,
+                                        "Venture Capital",
+                                      ] as any);
+                                    } else {
+                                      companyForm.setValue(
+                                        "externalFunding",
+                                        current.filter(
+                                          (item) => item !== "Venture Capital"
+                                        ) as any
+                                      );
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor="funding-vc">
                                   Venture Capital
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Checkbox
-                                  id="fundingFriends"
+                                  id="funding-loans"
                                   checked={companyForm
-                                    .getValues("externalFunding")
-                                    ?.includes("friends_family")}
+                                    .watch("externalFunding")
+                                    ?.includes("Loans")}
                                   onCheckedChange={(checked) => {
                                     const current =
-                                      companyForm.getValues(
-                                        "externalFunding"
-                                      ) || [];
+                                      companyForm.watch("externalFunding") ||
+                                      [];
                                     if (checked) {
-                                      const newValue = current.filter(
-                                        (item) => item !== "none"
-                                      );
                                       companyForm.setValue("externalFunding", [
-                                        ...newValue,
-                                        "friends_family",
-                                      ]);
+                                        ...current,
+                                        "Loans",
+                                      ] as any);
                                     } else {
                                       companyForm.setValue(
                                         "externalFunding",
                                         current.filter(
-                                          (item) => item !== "friends_family"
-                                        )
+                                          (item) => item !== "Loans"
+                                        ) as any
                                       );
                                     }
                                   }}
                                 />
-                                <Label
-                                  htmlFor="fundingFriends"
-                                  className="font-normal"
-                                >
-                                  Friends/Family
+                                <Label htmlFor="funding-loans">Loans</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id="funding-crowdfunding"
+                                  checked={companyForm
+                                    .watch("externalFunding")
+                                    ?.includes("Crowdfunding")}
+                                  onCheckedChange={(checked) => {
+                                    const current =
+                                      companyForm.watch("externalFunding") ||
+                                      [];
+                                    if (checked) {
+                                      companyForm.setValue("externalFunding", [
+                                        ...current,
+                                        "Crowdfunding",
+                                      ] as any);
+                                    } else {
+                                      companyForm.setValue(
+                                        "externalFunding",
+                                        current.filter(
+                                          (item) => item !== "Crowdfunding"
+                                        ) as any
+                                      );
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor="funding-crowdfunding">
+                                  Crowdfunding
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                {/* <Checkbox
-                                  id="fundingOther"
-                                  checked={companyForm.getValues("externalFunding")?.includes("other")}
-                                  onCheckedChange={(checked) => {
-                                    const current = companyForm.getValues("externalFunding") || [];
-                                      => {
-                                    const current = companyForm.getValues("externalFunding") || [];
-                                    if (checked) {
-                                      const newValue = current.filter(item => item !== "none");
-                                      companyForm.setValue("externalFunding", [...newValue, "other"]);
-                                    } else {
-                                      companyForm.setValue("externalFunding", current.filter(item => item !== "other"));
-                                    }
-                                  }}
-                                /> */}
-
                                 <Checkbox
-                                  id="fundingOther"
+                                  id="funding-none"
                                   checked={companyForm
-                                    .getValues("externalFunding")
-                                    ?.includes("other")}
+                                    .watch("externalFunding")
+                                    ?.includes("None")}
                                   onCheckedChange={(checked) => {
-                                    const current =
-                                      companyForm.getValues(
-                                        "externalFunding"
-                                      ) || [];
                                     if (checked) {
-                                      const newValue = current.filter(
-                                        (item) => item !== "none"
-                                      );
                                       companyForm.setValue("externalFunding", [
-                                        ...newValue,
-                                        "other",
-                                      ]);
+                                        "None",
+                                      ] as any);
                                     } else {
                                       companyForm.setValue(
                                         "externalFunding",
-                                        current.filter(
-                                          (item) => item !== "other"
-                                        )
+                                        [] as any
                                       );
                                     }
                                   }}
                                 />
-
-                                <Label
-                                  htmlFor="fundingOther"
-                                  className="font-normal"
-                                >
-                                  Other
-                                </Label>
+                                <Label htmlFor="funding-none">None</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id="funding-other"
+                                  checked={companyForm
+                                    .watch("externalFunding")
+                                    ?.includes("Other")}
+                                  onCheckedChange={(checked) => {
+                                    const current =
+                                      companyForm.watch("externalFunding") ||
+                                      [];
+                                    if (checked) {
+                                      companyForm.setValue("externalFunding", [
+                                        ...current,
+                                        "Other",
+                                      ] as any);
+                                    } else {
+                                      companyForm.setValue(
+                                        "externalFunding",
+                                        current.filter(
+                                          (item) => item !== "Other"
+                                        ) as any
+                                      );
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor="funding-other">Other</Label>
                               </div>
                             </div>
                           </div>
 
+                          {externalFundingValues?.includes("Other") && (
+                            <div className="space-y-2">
+                              <Label htmlFor="otherExternalFunding">
+                                Specify Other Funding
+                              </Label>
+                              <Input
+                                id="otherExternalFunding"
+                                {...companyForm.register(
+                                  "otherExternalFunding"
+                                )}
+                                placeholder="Please specify other funding sources"
+                              />
+                            </div>
+                          )}
+
                           <div className="space-y-2">
-                            <Label>
+                            <Label htmlFor="keepsFinancialRecords">
                               Do you keep financial records?{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex items-center space-x-4">
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "keepsFinancialRecords",
+                                  value as "Yes" | "No" | "Not Yet"
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "keepsFinancialRecords"
+                              )}
+                              className="flex space-x-4"
+                            >
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="recordsYes"
-                                  name="financialRecords"
-                                  checked={
-                                    companyForm.getValues(
-                                      "financialRecords"
-                                    ) === true
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "financialRecords",
-                                      true
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="Yes"
+                                  id="financial-records-yes"
                                 />
-                                <Label
-                                  htmlFor="recordsYes"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="financial-records-yes">
                                   Yes
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="recordsNo"
-                                  name="financialRecords"
-                                  checked={
-                                    companyForm.getValues(
-                                      "financialRecords"
-                                    ) === false
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "financialRecords",
-                                      false
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="No"
+                                  id="financial-records-no"
                                 />
-                                <Label
-                                  htmlFor="recordsNo"
-                                  className="font-normal"
-                                >
-                                  No
+                                <Label htmlFor="financial-records-no">No</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem
+                                  value="Not Yet"
+                                  id="financial-records-not-yet"
+                                />
+                                <Label htmlFor="financial-records-not-yet">
+                                  Not Yet
                                 </Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
                         </div>
                       </>
@@ -3639,652 +4194,580 @@ export default function OnboardingPage() {
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label>
+                            <Label htmlFor="usesDigitalTools">
                               Do you use digital tools in your business?{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex items-center space-x-4">
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "usesDigitalTools",
+                                  value as "Yes" | "No"
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "usesDigitalTools"
+                              )}
+                              className="flex space-x-4"
+                            >
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="digitalYes"
-                                  name="usesDigitalTools"
-                                  checked={
-                                    companyForm.getValues(
-                                      "usesDigitalTools"
-                                    ) === true
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "usesDigitalTools",
-                                      true
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="Yes"
+                                  id="digital-tools-yes"
                                 />
-                                <Label
-                                  htmlFor="digitalYes"
-                                  className="font-normal"
-                                >
-                                  Yes
-                                </Label>
+                                <Label htmlFor="digital-tools-yes">Yes</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="digitalNo"
-                                  name="usesDigitalTools"
-                                  checked={
-                                    companyForm.getValues(
-                                      "usesDigitalTools"
-                                    ) === false
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "usesDigitalTools",
-                                      false
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="No"
+                                  id="digital-tools-no"
                                 />
-                                <Label
-                                  htmlFor="digitalNo"
-                                  className="font-normal"
-                                >
-                                  No
-                                </Label>
+                                <Label htmlFor="digital-tools-no">No</Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
 
-                          {companyForm.getValues("usesDigitalTools") && (
+                          {usesDigitalToolsValue === "Yes" && (
                             <div className="space-y-2">
-                              <Label>
-                                If yes, which ones?{" "}
+                              <Label htmlFor="digitalTools">
+                                If yes, select from the dropdown items?{" "}
                                 <span className="text-red-500">*</span>
                               </Label>
-                              <div className="grid grid-cols-2 gap-2">
+                              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                                 <div className="flex items-center space-x-2">
                                   <Checkbox
-                                    id="toolMobileMoney"
+                                    id="digital-mobile-money"
                                     checked={companyForm
-                                      .getValues("digitalTools")
-                                      ?.includes("mobile_money")}
+                                      .watch("digitalTools")
+                                      ?.includes("Mobile Money")}
                                     onCheckedChange={(checked) => {
                                       const current =
-                                        companyForm.getValues("digitalTools") ||
-                                        [];
+                                        companyForm.watch("digitalTools") || [];
                                       if (checked) {
-                                        const current =
-                                          companyForm.getValues(
-                                            "digitalTools"
-                                          ) || [];
                                         companyForm.setValue("digitalTools", [
                                           ...current,
-                                          "other",
-                                        ]);
+                                          "Mobile Money",
+                                        ] as any);
                                       } else {
                                         companyForm.setValue(
                                           "digitalTools",
                                           current.filter(
-                                            (item) => item !== "other"
-                                          )
-                                        );
-                                      }
-                                      if (checked) {
-                                        companyForm.setValue("digitalTools", [
-                                          ...current,
-                                          "mobile_money",
-                                        ]);
-                                      } else {
-                                        companyForm.setValue(
-                                          "digitalTools",
-                                          current.filter(
-                                            (item) => item !== "mobile_money"
-                                          )
+                                            (item) => item !== "Mobile Money"
+                                          ) as any
                                         );
                                       }
                                     }}
                                   />
-                                  <Label
-                                    htmlFor="toolMobileMoney"
-                                    className="font-normal"
-                                  >
+                                  <Label htmlFor="digital-mobile-money">
                                     Mobile Money
                                   </Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <Checkbox
-                                    id="toolAccounting"
+                                    id="digital-accounting"
                                     checked={companyForm
-                                      .getValues("digitalTools")
-                                      ?.includes("accounting_software")}
+                                      .watch("digitalTools")
+                                      ?.includes("Accounting Software")}
                                     onCheckedChange={(checked) => {
                                       const current =
-                                        companyForm.getValues("digitalTools") ||
-                                        [];
+                                        companyForm.watch("digitalTools") || [];
                                       if (checked) {
                                         companyForm.setValue("digitalTools", [
                                           ...current,
-                                          "accounting_software",
-                                        ]);
+                                          "Accounting Software",
+                                        ] as any);
                                       } else {
                                         companyForm.setValue(
                                           "digitalTools",
                                           current.filter(
                                             (item) =>
-                                              item !== "accounting_software"
-                                          )
+                                              item !== "Accounting Software"
+                                          ) as any
                                         );
                                       }
                                     }}
                                   />
-                                  <Label
-                                    htmlFor="toolAccounting"
-                                    className="font-normal"
-                                  >
+                                  <Label htmlFor="digital-accounting">
                                     Accounting Software
                                   </Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <Checkbox
-                                    id="toolPOS"
+                                    id="digital-pos"
                                     checked={companyForm
-                                      .getValues("digitalTools")
-                                      ?.includes("pos")}
+                                      .watch("digitalTools")
+                                      ?.includes("POS")}
                                     onCheckedChange={(checked) => {
                                       const current =
-                                        companyForm.getValues("digitalTools") ||
-                                        [];
+                                        companyForm.watch("digitalTools") || [];
                                       if (checked) {
                                         companyForm.setValue("digitalTools", [
                                           ...current,
-                                          "pos",
-                                        ]);
+                                          "POS",
+                                        ] as any);
                                       } else {
                                         companyForm.setValue(
                                           "digitalTools",
                                           current.filter(
-                                            (item) => item !== "pos"
-                                          )
+                                            (item) => item !== "POS"
+                                          ) as any
                                         );
                                       }
                                     }}
                                   />
-                                  <Label
-                                    htmlFor="toolPOS"
-                                    className="font-normal"
-                                  >
-                                    POS
-                                  </Label>
+                                  <Label htmlFor="digital-pos">POS</Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <Checkbox
-                                    id="toolEcommerce"
+                                    id="digital-ecommerce"
                                     checked={companyForm
-                                      .getValues("digitalTools")
-                                      ?.includes("ecommerce")}
+                                      .watch("digitalTools")
+                                      ?.includes("E-commerce Platforms")}
                                     onCheckedChange={(checked) => {
                                       const current =
-                                        companyForm.getValues("digitalTools") ||
-                                        [];
+                                        companyForm.watch("digitalTools") || [];
                                       if (checked) {
                                         companyForm.setValue("digitalTools", [
                                           ...current,
-                                          "ecommerce",
-                                        ]);
+                                          "E-commerce Platforms",
+                                        ] as any);
                                       } else {
                                         companyForm.setValue(
                                           "digitalTools",
                                           current.filter(
-                                            (item) => item !== "ecommerce"
-                                          )
+                                            (item) =>
+                                              item !== "E-commerce Platforms"
+                                          ) as any
                                         );
                                       }
                                     }}
                                   />
-                                  <Label
-                                    htmlFor="toolEcommerce"
-                                    className="font-normal"
-                                  >
+                                  <Label htmlFor="digital-ecommerce">
                                     E-commerce Platforms
                                   </Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <Checkbox
-                                    id="toolSocialMedia"
+                                    id="digital-social-media"
                                     checked={companyForm
-                                      .getValues("digitalTools")
-                                      ?.includes("social_media")}
+                                      .watch("digitalTools")
+                                      ?.includes("Social Media Marketing")}
                                     onCheckedChange={(checked) => {
                                       const current =
-                                        companyForm.getValues("digitalTools") ||
-                                        [];
+                                        companyForm.watch("digitalTools") || [];
                                       if (checked) {
                                         companyForm.setValue("digitalTools", [
                                           ...current,
-                                          "social_media",
-                                        ]);
+                                          "Social Media Marketing",
+                                        ] as any);
                                       } else {
                                         companyForm.setValue(
                                           "digitalTools",
                                           current.filter(
-                                            (item) => item !== "social_media"
-                                          )
+                                            (item) =>
+                                              item !== "Social Media Marketing"
+                                          ) as any
                                         );
                                       }
                                     }}
                                   />
-                                  <Label
-                                    htmlFor="toolSocialMedia"
-                                    className="font-normal"
-                                  >
+                                  <Label htmlFor="digital-social-media">
                                     Social Media Marketing
                                   </Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <Checkbox
-                                    id="toolCRM"
+                                    id="digital-crm"
                                     checked={companyForm
-                                      .getValues("digitalTools")
-                                      ?.includes("crm_erp")}
+                                      .watch("digitalTools")
+                                      ?.includes("CRM / ERP Tools")}
                                     onCheckedChange={(checked) => {
                                       const current =
-                                        companyForm.getValues("digitalTools") ||
-                                        [];
+                                        companyForm.watch("digitalTools") || [];
                                       if (checked) {
                                         companyForm.setValue("digitalTools", [
                                           ...current,
-                                          "crm_erp",
-                                        ]);
+                                          "CRM / ERP Tools",
+                                        ] as any);
                                       } else {
                                         companyForm.setValue(
                                           "digitalTools",
                                           current.filter(
-                                            (item) => item !== "crm_erp"
-                                          )
+                                            (item) => item !== "CRM / ERP Tools"
+                                          ) as any
                                         );
                                       }
                                     }}
                                   />
-                                  <Label
-                                    htmlFor="toolCRM"
-                                    className="font-normal"
-                                  >
+                                  <Label htmlFor="digital-crm">
                                     CRM / ERP Tools
                                   </Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                  {/* <Checkbox
-                                    id="toolOther"
-                                    checked={companyForm.getValues("digitalTools")?.includes("other")}
+                                  <Checkbox
+                                    id="digital-other"
+                                    checked={companyForm
+                                      .watch("digitalTools")
+                                      ?.includes("Other")}
                                     onCheckedChange={(checked) => {
-                                      const current = companyForm.getValues("digitalTools") || [];
-                                        => {
-                                      const current = companyForm.getValues("digitalTools") || [];
+                                      const current =
+                                        companyForm.watch("digitalTools") || [];
                                       if (checked) {
-                                        companyForm.setValue("digitalTools", [...current, "other"]);
+                                        companyForm.setValue("digitalTools", [
+                                          ...current,
+                                          "Other",
+                                        ] as any);
                                       } else {
-                                        companyForm.setValue("digitalTools", current.filter(item => item !== "other"));
+                                        companyForm.setValue(
+                                          "digitalTools",
+                                          current.filter(
+                                            (item) => item !== "Other"
+                                          ) as any
+                                        );
                                       }
                                     }}
-                                  /> */}
-
-                                  <Label
-                                    htmlFor="toolOther"
-                                    className="font-normal"
-                                  >
-                                    Other
-                                  </Label>
+                                  />
+                                  <Label htmlFor="digital-other">Other</Label>
                                 </div>
                               </div>
                             </div>
                           )}
 
+                          {usesDigitalToolsValue === "Yes" &&
+                            digitalToolsValues?.includes("Other") && (
+                              <div className="space-y-2">
+                                <Label htmlFor="otherDigitalTools">
+                                  Specify Other Digital Tools
+                                </Label>
+                                <Input
+                                  id="otherDigitalTools"
+                                  {...companyForm.register("otherDigitalTools")}
+                                  placeholder="Please specify other digital tools"
+                                />
+                              </div>
+                            )}
+
                           <div className="space-y-2">
-                            <Label>
+                            <Label htmlFor="isInnovative">
                               Do you consider your business innovative?{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex items-center space-x-4">
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "isInnovative",
+                                  value as "Yes" | "No"
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "isInnovative"
+                              )}
+                              className="flex space-x-4"
+                            >
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="innovativeYes"
-                                  name="isInnovative"
-                                  checked={
-                                    companyForm.getValues("isInnovative") ===
-                                    true
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue("isInnovative", true)
-                                  }
+                                <RadioGroupItem
+                                  value="Yes"
+                                  id="innovative-yes"
                                 />
-                                <Label
-                                  htmlFor="innovativeYes"
-                                  className="font-normal"
-                                >
-                                  Yes
-                                </Label>
+                                <Label htmlFor="innovative-yes">Yes</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="innovativeNo"
-                                  name="isInnovative"
-                                  checked={
-                                    companyForm.getValues("isInnovative") ===
-                                    false
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue("isInnovative", false)
-                                  }
-                                />
-                                <Label
-                                  htmlFor="innovativeNo"
-                                  className="font-normal"
-                                >
-                                  No
-                                </Label>
+                                <RadioGroupItem value="No" id="innovative-no" />
+                                <Label htmlFor="innovative-no">No</Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
 
-                          {companyForm.getValues("isInnovative") && (
+                          {isInnovativeValue === "Yes" && (
                             <div className="space-y-2">
-                              <Label htmlFor="innovationDescription">
+                              <Label htmlFor="innovationExplanation">
                                 Explain how your business is innovative{" "}
                                 <span className="text-red-500">*</span>
                               </Label>
                               <Textarea
-                                id="innovationDescription"
+                                id="innovationExplanation"
                                 {...companyForm.register(
-                                  "innovationDescription"
+                                  "innovationExplanation"
                                 )}
-                                placeholder="Describe how your business is innovative"
+                                placeholder="Describe what makes your business innovative"
                                 className="min-h-[100px]"
                               />
+                              {companyForm.formState.errors
+                                .innovationExplanation && (
+                                <p className="text-sm text-red-500">
+                                  {
+                                    companyForm.formState.errors
+                                      .innovationExplanation.message
+                                  }
+                                </p>
+                              )}
                             </div>
                           )}
                         </div>
                       </>
                     )}
 
-                    {/* Step 9: Challenges */}
+                    {/* Step 9: Challenges & Growth */}
                     {step === 9 && (
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label>CHALLENGES FACED BY YOUR BUSINESS</Label>
-                            <div className="grid grid-cols-2 gap-2">
+                            <Label htmlFor="businessChallenges">
+                              CHALLENGES FACED BY YOUR BUSINESS{" "}
+                              <span className="text-red-500">*</span>
+                            </Label>
+                            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                               <div className="flex items-center space-x-2">
                                 <Checkbox
-                                  id="challengeFinance"
+                                  id="challenge-finance"
                                   checked={companyForm
-                                    .getValues("businessChallenges")
-                                    ?.includes("finance")}
+                                    .watch("businessChallenges")
+                                    ?.includes("Access to Finance")}
                                   onCheckedChange={(checked) => {
                                     const current =
-                                      companyForm.getValues(
-                                        "businessChallenges"
-                                      ) || [];
+                                      companyForm.watch("businessChallenges") ||
+                                      [];
                                     if (checked) {
                                       companyForm.setValue(
                                         "businessChallenges",
-                                        [...current, "finance"]
+                                        [...current, "Access to Finance"] as any
                                       );
                                     } else {
                                       companyForm.setValue(
                                         "businessChallenges",
                                         current.filter(
-                                          (item) => item !== "finance"
-                                        )
+                                          (item) => item !== "Access to Finance"
+                                        ) as any
                                       );
                                     }
                                   }}
                                 />
-                                <Label
-                                  htmlFor="challengeFinance"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="challenge-finance">
                                   Access to Finance
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Checkbox
-                                  id="challengeMarket"
+                                  id="challenge-market"
                                   checked={companyForm
-                                    .getValues("businessChallenges")
-                                    ?.includes("market")}
+                                    .watch("businessChallenges")
+                                    ?.includes("Market Access")}
                                   onCheckedChange={(checked) => {
                                     const current =
-                                      companyForm.getValues(
-                                        "businessChallenges"
-                                      ) || [];
+                                      companyForm.watch("businessChallenges") ||
+                                      [];
                                     if (checked) {
                                       companyForm.setValue(
                                         "businessChallenges",
-                                        [...current, "market"]
+                                        [...current, "Market Access"] as any
                                       );
                                     } else {
                                       companyForm.setValue(
                                         "businessChallenges",
                                         current.filter(
-                                          (item) => item !== "market"
-                                        )
+                                          (item) => item !== "Market Access"
+                                        ) as any
                                       );
                                     }
                                   }}
                                 />
-                                <Label
-                                  htmlFor="challengeMarket"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="challenge-market">
                                   Market Access
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Checkbox
-                                  id="challengeLabor"
+                                  id="challenge-labor"
                                   checked={companyForm
-                                    .getValues("businessChallenges")
-                                    ?.includes("labor")}
+                                    .watch("businessChallenges")
+                                    ?.includes("Skilled Labour")}
                                   onCheckedChange={(checked) => {
                                     const current =
-                                      companyForm.getValues(
-                                        "businessChallenges"
-                                      ) || [];
+                                      companyForm.watch("businessChallenges") ||
+                                      [];
                                     if (checked) {
                                       companyForm.setValue(
                                         "businessChallenges",
-                                        [...current, "labor"]
+                                        [...current, "Skilled Labour"] as any
                                       );
                                     } else {
                                       companyForm.setValue(
                                         "businessChallenges",
                                         current.filter(
-                                          (item) => item !== "labor"
-                                        )
+                                          (item) => item !== "Skilled Labour"
+                                        ) as any
                                       );
                                     }
                                   }}
                                 />
-                                <Label
-                                  htmlFor="challengeLabor"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="challenge-labor">
                                   Skilled Labour
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Checkbox
-                                  id="challengeMaterials"
+                                  id="challenge-materials"
                                   checked={companyForm
-                                    .getValues("businessChallenges")
-                                    ?.includes("materials")}
+                                    .watch("businessChallenges")
+                                    ?.includes("Raw Materials")}
                                   onCheckedChange={(checked) => {
                                     const current =
-                                      companyForm.getValues(
-                                        "businessChallenges"
-                                      ) || [];
+                                      companyForm.watch("businessChallenges") ||
+                                      [];
                                     if (checked) {
                                       companyForm.setValue(
                                         "businessChallenges",
-                                        [...current, "materials"]
+                                        [...current, "Raw Materials"] as any
                                       );
                                     } else {
                                       companyForm.setValue(
                                         "businessChallenges",
                                         current.filter(
-                                          (item) => item !== "materials"
-                                        )
+                                          (item) => item !== "Raw Materials"
+                                        ) as any
                                       );
                                     }
                                   }}
                                 />
-                                <Label
-                                  htmlFor="challengeMaterials"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="challenge-materials">
                                   Raw Materials
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Checkbox
-                                  id="challengeInfrastructure"
+                                  id="challenge-infrastructure"
                                   checked={companyForm
-                                    .getValues("businessChallenges")
-                                    ?.includes("infrastructure")}
+                                    .watch("businessChallenges")
+                                    ?.includes("Infrastructure")}
                                   onCheckedChange={(checked) => {
                                     const current =
-                                      companyForm.getValues(
-                                        "businessChallenges"
-                                      ) || [];
+                                      companyForm.watch("businessChallenges") ||
+                                      [];
                                     if (checked) {
                                       companyForm.setValue(
                                         "businessChallenges",
-                                        [...current, "infrastructure"]
+                                        [...current, "Infrastructure"] as any
                                       );
                                     } else {
                                       companyForm.setValue(
                                         "businessChallenges",
                                         current.filter(
-                                          (item) => item !== "infrastructure"
-                                        )
+                                          (item) => item !== "Infrastructure"
+                                        ) as any
                                       );
                                     }
                                   }}
                                 />
-                                <Label
-                                  htmlFor="challengeInfrastructure"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="challenge-infrastructure">
                                   Infrastructure
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Checkbox
-                                  id="challengeRegulation"
+                                  id="challenge-regulation"
                                   checked={companyForm
-                                    .getValues("businessChallenges")
-                                    ?.includes("regulation")}
+                                    .watch("businessChallenges")
+                                    ?.includes("Regulation / Compliance")}
                                   onCheckedChange={(checked) => {
                                     const current =
-                                      companyForm.getValues(
-                                        "businessChallenges"
-                                      ) || [];
+                                      companyForm.watch("businessChallenges") ||
+                                      [];
                                     if (checked) {
                                       companyForm.setValue(
                                         "businessChallenges",
-                                        [...current, "regulation"]
+                                        [
+                                          ...current,
+                                          "Regulation / Compliance",
+                                        ] as any
                                       );
                                     } else {
                                       companyForm.setValue(
                                         "businessChallenges",
                                         current.filter(
-                                          (item) => item !== "regulation"
-                                        )
+                                          (item) =>
+                                            item !== "Regulation / Compliance"
+                                        ) as any
                                       );
                                     }
                                   }}
                                 />
-                                <Label
-                                  htmlFor="challengeRegulation"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="challenge-regulation">
                                   Regulation / Compliance
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Checkbox
-                                  id="challengeDigital"
+                                  id="challenge-digital"
                                   checked={companyForm
-                                    .getValues("businessChallenges")
-                                    ?.includes("digital")}
+                                    .watch("businessChallenges")
+                                    ?.includes("Digital Skills")}
                                   onCheckedChange={(checked) => {
                                     const current =
-                                      companyForm.getValues(
-                                        "businessChallenges"
-                                      ) || [];
+                                      companyForm.watch("businessChallenges") ||
+                                      [];
                                     if (checked) {
                                       companyForm.setValue(
                                         "businessChallenges",
-                                        [...current, "digital"]
+                                        [...current, "Digital Skills"] as any
                                       );
                                     } else {
                                       companyForm.setValue(
                                         "businessChallenges",
                                         current.filter(
-                                          (item) => item !== "digital"
-                                        )
+                                          (item) => item !== "Digital Skills"
+                                        ) as any
                                       );
                                     }
                                   }}
                                 />
-                                <Label
-                                  htmlFor="challengeDigital"
-                                  className="font-normal"
-                                >
+                                <Label htmlFor="challenge-digital">
                                   Digital Skills
                                 </Label>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Checkbox
-                                  id="challengeOthers"
+                                  id="challenge-other"
                                   checked={companyForm
-                                    .getValues("businessChallenges")
-                                    ?.includes("others")}
+                                    .watch("businessChallenges")
+                                    ?.includes("Other")}
                                   onCheckedChange={(checked) => {
                                     const current =
-                                      companyForm.getValues(
-                                        "businessChallenges"
-                                      ) || [];
+                                      companyForm.watch("businessChallenges") ||
+                                      [];
                                     if (checked) {
                                       companyForm.setValue(
                                         "businessChallenges",
-                                        [...current, "others"]
+                                        [...current, "Other"] as any
                                       );
                                     } else {
                                       companyForm.setValue(
                                         "businessChallenges",
                                         current.filter(
-                                          (item) => item !== "others"
-                                        )
+                                          (item) => item !== "Other"
+                                        ) as any
                                       );
                                     }
                                   }}
                                 />
-                                <Label
-                                  htmlFor="challengeOthers"
-                                  className="font-normal"
-                                >
-                                  Others
-                                </Label>
+                                <Label htmlFor="challenge-other">Other</Label>
                               </div>
                             </div>
                           </div>
+
+                          {businessChallengesValues?.includes("Other") && (
+                            <div className="space-y-2">
+                              <Label htmlFor="otherBusinessChallenges">
+                                Specify Other Challenges
+                              </Label>
+                              <Input
+                                id="otherBusinessChallenges"
+                                {...companyForm.register(
+                                  "otherBusinessChallenges"
+                                )}
+                                placeholder="Please specify other challenges"
+                              />
+                            </div>
+                          )}
 
                           <div className="space-y-2">
                             <Label htmlFor="supportNeeded">
@@ -4297,60 +4780,48 @@ export default function OnboardingPage() {
                               placeholder="Describe the support your business needs"
                               className="min-h-[100px]"
                             />
+                            {companyForm.formState.errors.supportNeeded && (
+                              <p className="text-sm text-red-500">
+                                {
+                                  companyForm.formState.errors.supportNeeded
+                                    .message
+                                }
+                              </p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
-                            <Label>
+                            <Label htmlFor="planningExpansion">
                               Do you plan to expand in the next 12 months?{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex items-center space-x-4">
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "planningExpansion",
+                                  value as "Yes" | "No"
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "planningExpansion"
+                              )}
+                              className="flex space-x-4"
+                            >
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="expandYes"
-                                  name="planToExpand"
-                                  checked={
-                                    companyForm.getValues("planToExpand") ===
-                                    true
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue("planToExpand", true)
-                                  }
+                                <RadioGroupItem
+                                  value="Yes"
+                                  id="expansion-yes"
                                 />
-                                <Label
-                                  htmlFor="expandYes"
-                                  className="font-normal"
-                                >
-                                  Yes
-                                </Label>
+                                <Label htmlFor="expansion-yes">Yes</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="expandNo"
-                                  name="planToExpand"
-                                  checked={
-                                    companyForm.getValues("planToExpand") ===
-                                    false
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue("planToExpand", false)
-                                  }
-                                />
-                                <Label
-                                  htmlFor="expandNo"
-                                  className="font-normal"
-                                >
-                                  No
-                                </Label>
+                                <RadioGroupItem value="No" id="expansion-no" />
+                                <Label htmlFor="expansion-no">No</Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
 
-                          {companyForm.getValues("planToExpand") && (
+                          {planningExpansionValue === "Yes" && (
                             <div className="space-y-2">
                               <Label htmlFor="expansionPlans">
                                 If yes, how do you plan to grow?{" "}
@@ -4362,6 +4833,14 @@ export default function OnboardingPage() {
                                 placeholder="Describe your expansion plans"
                                 className="min-h-[100px]"
                               />
+                              {companyForm.formState.errors.expansionPlans && (
+                                <p className="text-sm text-red-500">
+                                  {
+                                    companyForm.formState.errors.expansionPlans
+                                      .message
+                                  }
+                                </p>
+                              )}
                             </div>
                           )}
                         </div>
@@ -4373,123 +4852,70 @@ export default function OnboardingPage() {
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label>
+                            <Label htmlFor="employsVulnerableGroups">
                               Do you create employment for vulnerable groups
                               (youth, women, PWD)?{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex items-center space-x-4">
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "employsVulnerableGroups",
+                                  value as "Yes" | "No"
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "employsVulnerableGroups"
+                              )}
+                              className="flex space-x-4"
+                            >
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="vulnerableYes"
-                                  name="employsVulnerableGroups"
-                                  checked={
-                                    companyForm.getValues(
-                                      "employsVulnerableGroups"
-                                    ) === true
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "employsVulnerableGroups",
-                                      true
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="Yes"
+                                  id="vulnerable-yes"
                                 />
-                                <Label
-                                  htmlFor="vulnerableYes"
-                                  className="font-normal"
-                                >
-                                  Yes
-                                </Label>
+                                <Label htmlFor="vulnerable-yes">Yes</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="vulnerableNo"
-                                  name="employsVulnerableGroups"
-                                  checked={
-                                    companyForm.getValues(
-                                      "employsVulnerableGroups"
-                                    ) === false
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "employsVulnerableGroups",
-                                      false
-                                    )
-                                  }
-                                />
-                                <Label
-                                  htmlFor="vulnerableNo"
-                                  className="font-normal"
-                                >
-                                  No
-                                </Label>
+                                <RadioGroupItem value="No" id="vulnerable-no" />
+                                <Label htmlFor="vulnerable-no">No</Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
 
                           <div className="space-y-2">
-                            <Label>
+                            <Label htmlFor="addressesEnvironmentalSustainability">
                               Do you actively address environmental
                               sustainability?{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex items-center space-x-4">
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "addressesEnvironmentalSustainability",
+                                  value as "Yes" | "No"
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "addressesEnvironmentalSustainability"
+                              )}
+                              className="flex space-x-4"
+                            >
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="environmentYes"
-                                  name="addressesEnvironmentalSustainability"
-                                  checked={
-                                    companyForm.getValues(
-                                      "addressesEnvironmentalSustainability"
-                                    ) === true
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "addressesEnvironmentalSustainability",
-                                      true
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="Yes"
+                                  id="environmental-yes"
                                 />
-                                <Label
-                                  htmlFor="environmentYes"
-                                  className="font-normal"
-                                >
-                                  Yes
-                                </Label>
+                                <Label htmlFor="environmental-yes">Yes</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="environmentNo"
-                                  name="addressesEnvironmentalSustainability"
-                                  checked={
-                                    companyForm.getValues(
-                                      "addressesEnvironmentalSustainability"
-                                    ) === false
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "addressesEnvironmentalSustainability",
-                                      false
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="No"
+                                  id="environmental-no"
                                 />
-                                <Label
-                                  htmlFor="environmentNo"
-                                  className="font-normal"
-                                >
-                                  No
-                                </Label>
+                                <Label htmlFor="environmental-no">No</Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
 
                           <div className="space-y-2">
@@ -4500,9 +4926,17 @@ export default function OnboardingPage() {
                             <Textarea
                               id="impactInitiatives"
                               {...companyForm.register("impactInitiatives")}
-                              placeholder="Describe your social and environmental impact initiatives"
+                              placeholder="Describe your social or environmental impact initiatives"
                               className="min-h-[100px]"
                             />
+                            {companyForm.formState.errors.impactInitiatives && (
+                              <p className="text-sm text-red-500">
+                                {
+                                  companyForm.formState.errors.impactInitiatives
+                                    .message
+                                }
+                              </p>
+                            )}
                           </div>
                         </div>
                       </>
@@ -4513,129 +4947,69 @@ export default function OnboardingPage() {
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label>
+                            <Label htmlFor="joinEcosystemPrograms">
                               Would you like to be part of Innovation SL's
                               ecosystem support programs?{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex items-center space-x-4">
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "joinEcosystemPrograms",
+                                  value as "Yes" | "No"
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "joinEcosystemPrograms"
+                              )}
+                              className="flex space-x-4"
+                            >
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="ecosystemYes"
-                                  name="joinEcosystemPrograms"
-                                  checked={
-                                    companyForm.getValues(
-                                      "joinEcosystemPrograms"
-                                    ) === true
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "joinEcosystemPrograms",
-                                      true
-                                    )
-                                  }
+                                <RadioGroupItem
+                                  value="Yes"
+                                  id="ecosystem-yes"
                                 />
-                                <Label
-                                  htmlFor="ecosystemYes"
-                                  className="font-normal"
-                                >
-                                  Yes
-                                </Label>
+                                <Label htmlFor="ecosystem-yes">Yes</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="ecosystemNo"
-                                  name="joinEcosystemPrograms"
-                                  checked={
-                                    companyForm.getValues(
-                                      "joinEcosystemPrograms"
-                                    ) === false
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "joinEcosystemPrograms",
-                                      false
-                                    )
-                                  }
-                                />
-                                <Label
-                                  htmlFor="ecosystemNo"
-                                  className="font-normal"
-                                >
-                                  No
-                                </Label>
+                                <RadioGroupItem value="No" id="ecosystem-no" />
+                                <Label htmlFor="ecosystem-no">No</Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
 
                           <div className="space-y-2">
-                            <Label>
-                              Do you agree with us for storing and analyzing
+                            <Label htmlFor="consentToDataUsage">
+                              Do you give us consent for storing and analyzing
                               your data for ecosystem development purposes?{" "}
                               <span className="text-red-500">*</span>
                             </Label>
-                            <div className="flex items-center space-x-4">
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "consentToDataUsage",
+                                  value as "Yes" | "No"
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "consentToDataUsage"
+                              )}
+                              className="flex space-x-4"
+                            >
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="dataStorageYes"
-                                  name="agreeToDataStorage"
-                                  checked={
-                                    companyForm.getValues(
-                                      "agreeToDataStorage"
-                                    ) === true
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "agreeToDataStorage",
-                                      true
-                                    )
-                                  }
-                                />
-                                <Label
-                                  htmlFor="dataStorageYes"
-                                  className="font-normal"
-                                >
-                                  Yes
-                                </Label>
+                                <RadioGroupItem value="Yes" id="consent-yes" />
+                                <Label htmlFor="consent-yes">Yes</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <input
-                                  title="Specify the purpose of this input"
-                                  type="radio"
-                                  id="dataStorageNo"
-                                  name="agreeToDataStorage"
-                                  checked={
-                                    companyForm.getValues(
-                                      "agreeToDataStorage"
-                                    ) === false
-                                  }
-                                  onChange={() =>
-                                    companyForm.setValue(
-                                      "agreeToDataStorage",
-                                      false
-                                    )
-                                  }
-                                />
-                                <Label
-                                  htmlFor="dataStorageNo"
-                                  className="font-normal"
-                                >
-                                  No
-                                </Label>
+                                <RadioGroupItem value="No" id="consent-no" />
+                                <Label htmlFor="consent-no">No</Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
 
                           <div className="space-y-2">
                             <Label htmlFor="additionalComments">
-                              Any other comments or suggestions?{" "}
-                              <span className="text-red-500">*</span>
+                              Any other comments or suggestions?
                             </Label>
                             <Textarea
                               id="additionalComments"
@@ -4644,13 +5018,24 @@ export default function OnboardingPage() {
                               className="min-h-[100px]"
                             />
                           </div>
+
+                          <Alert className="bg-muted/50">
+                            <Info className="h-4 w-4" />
+                            <AlertDescription>
+                              By submitting this form, you confirm that all
+                              information provided is accurate to the best of
+                              your knowledge. This information will be used to
+                              better support your business and the wider
+                              entrepreneurial ecosystem.
+                            </AlertDescription>
+                          </Alert>
                         </div>
                       </>
                     )}
                   </form>
                 )}
 
-                {/* Investor Form Steps */}
+                {/* Investor Form Steps - keeping this for reference */}
                 {entityType === "investor" && (
                   <form
                     onSubmit={investorForm.handleSubmit(onSubmit)}
@@ -4808,9 +5193,7 @@ export default function OnboardingPage() {
                                     <SelectItem value="linkedin">
                                       LinkedIn
                                     </SelectItem>
-                                    <SelectItem value="twitter">
-                                      Twitter
-                                    </SelectItem>
+                                    <SelectItem value="x">X</SelectItem>
                                     <SelectItem value="facebook">
                                       Facebook
                                     </SelectItem>
@@ -4902,17 +5285,6 @@ export default function OnboardingPage() {
                             </Popover>
                           </div>
 
-                          {/* <div className="space-y-2">
-                            <Label htmlFor="registrationNumber">
-                              Registration Number
-                            </Label>
-                            <Input
-                              id="registrationNumber"
-                              {...investorForm.register("registrationNumber")}
-                              placeholder="Investment firm registration number"
-                            />
-                          </div> */}
-
                           <div className="space-y-2">
                             <Label htmlFor="description">
                               Investor Description
@@ -4926,7 +5298,9 @@ export default function OnboardingPage() {
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="fundingCapacity">Ticket Size</Label>
+                            <Label htmlFor="fundingCapacity">
+                              Tickect Size
+                            </Label>
                             <Select
                               onValueChange={(value) =>
                                 investorForm.setValue("fundingCapacity", value)
@@ -4976,6 +5350,11 @@ export default function OnboardingPage() {
                                     {status}
                                   </SelectItem>
                                 ))}
+                                {!fundingStatus.includes("Series C") && (
+                                  <SelectItem value="Series C">
+                                    Series C
+                                  </SelectItem>
+                                )}
                               </SelectContent>
                             </Select>
                           </div>
@@ -5002,7 +5381,7 @@ export default function OnboardingPage() {
                             />
                           </div>
 
-                          <div className="space-y-2">
+                          {/* <div className="space-y-2">
                             <Label htmlFor="businessRegistrationDocuments">
                               Business Registration Documents
                             </Label>
@@ -5023,21 +5402,21 @@ export default function OnboardingPage() {
                             <p className="text-xs text-muted-foreground">
                               Upload business registration documents
                             </p>
-                          </div>
+                          </div> */}
 
                           <div className="space-y-2">
-                            <Label htmlFor="profileDocuments">
-                              Investment Profile Documents
+                            <Label htmlFor="investmentBroucher">
+                              Investment Broucher .pdf
                             </Label>
                             <Input
-                              id="profileDocuments"
+                              id="investmentBroucher"
                               type="file"
                               className="cursor-pointer"
                               onChange={(e) => {
                                 if (e.target.files?.[0]) {
                                   // In a real app, you'd upload this to storage and save the URL
                                   investorForm.setValue(
-                                    "profileDocuments",
+                                    "investmentBroucher",
                                     e.target.files[0].name
                                   );
                                 }
@@ -5064,48 +5443,58 @@ export default function OnboardingPage() {
                     )}
                   </form>
                 )}
-
-                {/* ESO Form Steps (Placeholder) */}
-                {entityType === "ngo" && (
-                  <div className="space-y-4">
-                    <p>NGO onboarding form will be available soon.</p>
-                    <div className="space-y-2">
-                      <Label htmlFor="name">NGO Name</Label>
-                      <Input
-                        id="name"
-                        {...ngoForm.register("name")}
-                        placeholder="Enter NGO name"
-                      />
-                    </div>
-                  </div>
-                )}
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button type="button" variant="outline" onClick={prevStep}>
-                  <ChevronLeftIcon className="mr-2 h-4 w-4" />
-                  {step === 1 ? "Back to Selection" : "Previous"}
-                </Button>
+              <CardFooter className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-y-0">
+                <div className="flex w-full flex-col justify-between gap-4 sm:flex-row">
+                  <div className="flex items-center">
+                    <Button type="button" variant="outline" onClick={prevStep}>
+                      <ChevronLeftIcon className="mr-2 h-4 w-4" />
+                      {step === 1 ? "Back to Selection" : "Previous"}
+                    </Button>
 
-                {step < totalSteps ? (
-                  <Button type="button" onClick={nextStep}>
-                    Next
-                    <ChevronRightIcon className="ml-2 h-4 w-4" />
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    disabled={isLoading}
-                    onClick={
-                      entityType === "company"
-                        ? companyForm.handleSubmit(onSubmit)
-                        : entityType === "investor"
-                        ? investorForm.handleSubmit(onSubmit)
-                        : ngoForm.handleSubmit(onSubmit)
-                    }
-                  >
-                    {isLoading ? "Saving..." : "Complete Profile"}
-                  </Button>
-                )}
+                    {lastSaved && !isSaving && (
+                      <p className="ml-4 text-xs text-muted-foreground">
+                        Last saved: {lastSaved.toLocaleTimeString()}
+                      </p>
+                    )}
+                    {isSaving && (
+                      <p className="ml-4 text-xs text-muted-foreground animate-pulse">
+                        Saving...
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    {step > 0 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={saveProgress}
+                      >
+                        Save Progress
+                      </Button>
+                    )}
+
+                    {step < (entityType === "company" ? totalSteps : 4) ? (
+                      <Button type="button" onClick={nextStep}>
+                        Next
+                        <ChevronRightIcon className="ml-2 h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        disabled={isLoading}
+                        onClick={
+                          entityType === "company"
+                            ? companyForm.handleSubmit(onSubmit)
+                            : investorForm.handleSubmit(onSubmit)
+                        }
+                      >
+                        {isLoading ? "Saving..." : "Complete Profile"}
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </CardFooter>
             </Card>
           </>
