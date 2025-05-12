@@ -2922,9 +2922,7 @@ export default function OnboardingPage() {
                                     <SelectItem value="linkedin">
                                       LinkedIn
                                     </SelectItem>
-                                    <SelectItem value="twitter">
-                                      Twitter
-                                    </SelectItem>
+                                    <SelectItem value="twitter">X</SelectItem>
                                     <SelectItem value="facebook">
                                       Facebook
                                     </SelectItem>
