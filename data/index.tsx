@@ -31,7 +31,7 @@ export const fundingStatus = [
   "Acquired",
 ];
 
-export const investmentTypes = [
+export const investorTypes = [
   "Venture Capital",
   "Angel Investor",
   "Private Equity",
@@ -98,4 +98,21 @@ export const employmentForVulnerableGroups = [
   "Youth",
   "Women",
   "Persons with Disabilities",
+];
+
+export const investmentRanges = [
+  "$10,000 - $50,000",
+  "$50,000 - $100,000",
+  "$100,000 - $250,000",
+  "$250,000 - $500,000",
+  "$500,000 - $1,000,000",
+  "$1,000,000 - $5,000,000",
+  "$5,000,000+",
+];
+
+export const timeframes = [
+  "Immediate (0-3 months)",
+  "Short-term (3-6 months)",
+  "Medium-term (6-12 months)",
+  "Long-term (12+ months)",
 ];

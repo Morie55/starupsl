@@ -467,7 +467,7 @@ export default function RoundsTable({ rounds, loading }: any) {
                         <TableCell>
                           <div className="text-center">
                             {/* {round.investors?.length || 0} */}
-
+                            {}
                             <div className="flex items-center justify-center mt-1 -space-x-3">
                               <div className="w-6 h-6 rounded-full bg-gray-500 flex items-center justify-center text-sm font-medium text-gray-700"></div>
                               <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-sm font-medium text-gray-700"></div>
@@ -489,14 +489,15 @@ export default function RoundsTable({ rounds, loading }: any) {
                           </div>
                         </TableCell>
 
-                        {user?.publicMetadata.role === "company" ||
-                          (user?.publicMetadata.role === "admin" && (
-                            <TableCell>
-                              <Link href={`/round/${round._id}`}>
-                                <Button>View details</Button>
-                              </Link>
-                            </TableCell>
-                          ))}
+                        {(user?.publicMetadata.role !== "company" ||
+                          user?.id === round.companyId ||
+                          user?.publicMetadata.role === "admin") && (
+                          <TableCell>
+                            <Link href={`/round/${round._id}`}>
+                              <Button>View details</Button>
+                            </Link>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))
                   )}

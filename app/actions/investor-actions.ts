@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache";
 
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import Investor from "@/models/Investor";
+import { connect } from "@/lib/mongoDB";
 
 // Add a new investor
 export async function createInvestor(data: any) {
   try {
+    await connect();
     const { userId } = await auth();
 
     if (!userId) {
@@ -70,8 +72,11 @@ export async function getInvestorsAction(filters?: {
   limit?: number;
 }) {
   try {
-    const result = await getAllInvestors(filters);
-    return { success: true, ...result };
+    await connect();
+    console.log(filters);
+    const result = await Investor.find();
+
+    return JSON.parse(JSON.stringify({ success: true, data: result }));
   } catch (error) {
     console.error("Error fetching investors:", error);
     return {
@@ -88,13 +93,14 @@ export async function getInvestorsAction(filters?: {
 // Get a single investor by ID
 export async function getInvestorByIdAction(id: string) {
   try {
-    const investor = await getInvestorById(id);
+    await connect();
+    const investor = await Investor.findById(id);
 
     if (!investor) {
       return { success: false, error: "Investor not found" };
     }
 
-    return { success: true, investor };
+    return JSON.parse(JSON.stringify({ success: true, investor: investor }));
   } catch (error) {
     console.error("Error fetching investor:", error);
     return { success: false, error: "Failed to fetch investor" };

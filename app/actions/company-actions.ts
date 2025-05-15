@@ -87,7 +87,7 @@ export const getCompany = async (id: string) => {
   try {
     await connect();
     const company = await Company.findById(id);
-    return company;
+    return JSON.parse(JSON.stringify(company));
   } catch (error) {
     console.error("Error fetching company:", error);
     throw new Error("Failed to fetch company!");
@@ -294,25 +294,27 @@ export async function getCompaniesAction(filters?: {
 // }
 
 import mongoose from "mongoose";
+import { stringify } from "querystring";
 // Removed duplicate import of Company
 
 export async function getCompanyByIdAction(id: string) {
   try {
+    await connect();
+
     // Validate the MongoDB ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id) {
       throw new Error("Invalid company ID");
     }
 
-    const company = await Company.findById(id).exec();
+    const company = await Company.findById(id);
 
     if (!company) {
       throw new Error("Company not found");
     }
 
-    return company;
+    return JSON.parse(JSON.stringify(company));
   } catch (error: any) {
     console.error("Error in getCompanyByIdAction:", error.message);
-    throw new Error(error.message || "Failed to fetch company");
   }
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -39,36 +39,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+import { timeframes, investmentRanges, investorTypes } from "@/data";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-
-const investmentRanges = [
-  { value: "10k-50k", label: "$10,000 - $50,000" },
-  { value: "50k-100k", label: "$50,000 - $100,000" },
-  { value: "100k-250k", label: "$100,000 - $250,000" },
-  { value: "250k-500k", label: "$250,000 - $500,000" },
-  { value: "500k-1m", label: "$500,000 - $1,000,000" },
-  { value: "1m-5m", label: "$1,000,000 - $5,000,000" },
-  { value: "5m+", label: "$5,000,000+" },
-];
-
-const investorTypes = [
-  { value: "angel", label: "Angel Investor" },
-  { value: "vc", label: "Venture Capital" },
-  { value: "pe", label: "Private Equity" },
-  { value: "family_office", label: "Family Office" },
-  { value: "corporate", label: "Corporate Investor" },
-  { value: "individual", label: "Individual Investor" },
-  { value: "other", label: "Other" },
-];
-
-const timeframes = [
-  { value: "immediate", label: "Immediate (0-3 months)" },
-  { value: "short", label: "Short-term (3-6 months)" },
-  { value: "medium", label: "Medium-term (6-12 months)" },
-  { value: "long", label: "Long-term (12+ months)" },
-];
+import { useUser } from "@clerk/nextjs";
+import { getInvestorByIdAction } from "@/app/actions/investor-actions";
 
 const investmentGoals = [
   { id: "growth", label: "Growth & Expansion" },
@@ -131,12 +109,13 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function InvestorInterestForm({ company }: { company: any }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [investorData, setInvestorData] = useState({});
+  const { user } = useUser();
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "",
-      email: "",
+      fullName: user?.firstName ?? "hhhhhhh",
+      email: user?.emailAddresses[0]?.emailAddress ?? "",
       phone: "",
       company: "",
       investorType: "",
@@ -155,22 +134,29 @@ export default function InvestorInterestForm({ company }: { company: any }) {
 
   const watchHasPreviousInvestments = form.watch("hasPreviousInvestments");
 
+  const getinverstordata = async () => {
+    const id: any = user?.publicMetadata?.companyId!;
+    const investorres = await getInvestorByIdAction("680972ac91dc66b00e146649");
+
+    const invet = investorres.investor;
+    form.setValue("fullName", invet?.name || "");
+    form.setValue("email", invet?.email || "");
+    form.setValue("phone", invet?.phone || "");
+    setInvestorData(invet);
+  };
+
+  useEffect(() => {
+    getinverstordata();
+  }, [user]);
+
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
 
     try {
-      // Here you would typically send the data to your backend
-      console.log("Form values:", values);
-      console.log("Company ID:", company?._id);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Show success message
-      alert(
-        "Your interest has been submitted successfully. The company will be in touch with you shortly."
-      );
-
+      const interestres = await createinterest(values);
+      if (interestres.success) {
+        alert("There was an error submitting your interest. Please try again.");
+      }
       form.reset();
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -181,7 +167,7 @@ export default function InvestorInterestForm({ company }: { company: any }) {
   }
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card className="w-full">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl">Express Investment Interest</CardTitle>
         <CardDescription>
@@ -286,10 +272,18 @@ export default function InvestorInterestForm({ company }: { company: any }) {
                             <SelectValue placeholder="Select investor type" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        {/* <SelectContent>
                           {investorTypes.map((type) => (
                             <SelectItem key={type.value} value={type.value}>
                               {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent> */}
+
+                        <SelectContent>
+                          {investorTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -371,8 +365,8 @@ export default function InvestorInterestForm({ company }: { company: any }) {
                         </FormControl>
                         <SelectContent>
                           {investmentRanges.map((range) => (
-                            <SelectItem key={range.value} value={range.value}>
-                              {range.label}
+                            <SelectItem key={range} value={range}>
+                              {range}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -399,11 +393,8 @@ export default function InvestorInterestForm({ company }: { company: any }) {
                         </FormControl>
                         <SelectContent>
                           {timeframes.map((timeframe) => (
-                            <SelectItem
-                              key={timeframe.value}
-                              value={timeframe.value}
-                            >
-                              {timeframe.label}
+                            <SelectItem key={timeframe} value={timeframe}>
+                              {timeframe}
                             </SelectItem>
                           ))}
                         </SelectContent>

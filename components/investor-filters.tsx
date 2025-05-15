@@ -17,10 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getFilterOptions } from "@/app/actions/investor-actions";
+
 // import { getFilterOptions } from "@/lib/db-simulation";
 
-export default function InvestorFilters({ currentFilters, onFilterChange }) {
+export default function InvestorFilters({
+  currentFilters,
+  onFilterChange,
+}: any) {
   const [sectors, setSectors] = useState([]);
   const [locations, setLocations] = useState([]);
   const [stages, setStages] = useState([]);
@@ -36,7 +39,7 @@ export default function InvestorFilters({ currentFilters, onFilterChange }) {
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        const options = await getFilterOptions();
+        const options: any = {};
         setSectors(options.sectors || []);
         setLocations(options.locations || []);
         setStages(options.stages || []);

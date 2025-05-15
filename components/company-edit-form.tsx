@@ -359,7 +359,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
   const form = useForm<z.infer<typeof companyFormSchema>>({
     resolver: zodResolver(companyFormSchema),
     defaultValues: {
-      name: company?.name ?? "",
+      name: company?.name ?? "HSHSH",
       sector: company?.sector ?? "",
       otherSector: company?.otherSector ?? "",
       type: company?.type ?? "",

@@ -533,6 +533,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getCompanyRounds } from "@/app/actions/round-actions";
 
 // Define the Company interface based on your MongoDB schema
 interface Company {
@@ -670,16 +671,11 @@ export default function CompanyDetailsPage({
   const fetchRounds = async () => {
     try {
       setLoading(true);
-      // This is a placeholder - you would need to implement the actual API call
-      // const response = await fetch(`/api/companies/${company._id}/rounds`);
-      // const data = await response.json();
-      // setRounds(data.rounds);
+      const rounds: any = await getCompanyRounds(company._id);
 
-      // For now, we'll just set an empty array after a delay to simulate loading
-      setTimeout(() => {
-        setRounds([]);
-        setLoading(false);
-      }, 1000);
+      setRounds(rounds);
+
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching rounds:", error);
       setLoading(false);
@@ -749,9 +745,9 @@ export default function CompanyDetailsPage({
   }
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className=" min-h-screen">
       {/* Hero section with company info */}
-      <div className="bg-gradient-to-b from-slate-50 to-white border-b">
+      <div className="dark:bg-accent border-b">
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Back button */}
           <div className="mb-6">
@@ -783,7 +779,7 @@ export default function CompanyDetailsPage({
             </div> */}
 
             <div className="flex-shrink-0">
-              <div className="relative h-28 w-28 rounded-xl overflow-hidden border bg-white shadow-sm flex items-center justify-center">
+              <div className="relative h-28 w-28 rounded-xl overflow-hidden border  shadow-sm flex items-center justify-center">
                 {company?.logo ? (
                   <Image
                     src={company.logo || "/placeholder.svg"}
@@ -806,7 +802,7 @@ export default function CompanyDetailsPage({
             <div className="flex-grow space-y-4">
               <div>
                 {/* <div className="flex flex-wrap items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-slate-900">
+                  <h1 className="text-3xl font-bold ">
                     {company.name}
                   </h1>
                   {company.stage && (
@@ -821,7 +817,7 @@ export default function CompanyDetailsPage({
                   )}
                 </div> */}
                 <div className="flex flex-wrap items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-slate-900">
+                  <h1 className="text-3xl font-bold ">
                     {company?.name || "Loading..."}
                   </h1>
                   {company?.stage && <Badge>{company.stage}</Badge>}
@@ -1003,9 +999,9 @@ export default function CompanyDetailsPage({
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Key metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <Card className="border-0 shadow-md bg-white overflow-hidden">
-            <CardHeader className="pb-2 bg-gradient-to-r from-slate-50 to-white">
-              <CardDescription className="text-slate-500 font-medium">
+          <Card className="border-0 shadow-md dark:bg-accent  overflow-hidden">
+            <CardHeader className="pb-2 ">
+              <CardDescription className="font-medium">
                 Business Age
               </CardDescription>
             </CardHeader>
@@ -1017,7 +1013,7 @@ export default function CompanyDetailsPage({
                   Founded {formatDate(company.foundedAt)}
                 </p>
               )} */}
-              <div className="text-2xl font-bold text-slate-900">
+              <div className="text-2xl font-bold ">
                 {company?.foundedAt ? getBusinessAge(company.foundedAt) : "N/A"}
               </div>
               {company?.foundedAt && (
@@ -1028,20 +1024,20 @@ export default function CompanyDetailsPage({
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-md bg-white overflow-hidden">
-            <CardHeader className="pb-2 bg-gradient-to-r from-slate-50 to-white">
-              <CardDescription className="text-slate-500 font-medium">
+          <Card className="border-0 shadow-md dark:bg-accent  overflow-hidden">
+            <CardHeader className="pb-2 ">
+              <CardDescription className="font-medium">
                 Funding Status
               </CardDescription>
             </CardHeader>
             <CardContent>
               {/* <div className="flex items-center">
-                <div className="text-2xl font-bold text-slate-900">
+                <div className="text-2xl font-bold ">
                   {company.fundingStatus || "Not specified"}
                 </div>
               </div> */}
               <div className="flex items-center">
-                <div className="text-2xl font-bold text-slate-900">
+                <div className="text-2xl font-bold ">
                   {company?.fundingStatus || "Not specified"}
                 </div>
               </div>
@@ -1067,7 +1063,7 @@ export default function CompanyDetailsPage({
                 <div className="mt-2">
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-slate-500">Amount Raised</span>
-                    <span className="text-slate-900 font-medium">
+                    <span className=" font-medium">
                       ${company.amountRaised.toLocaleString()}
                     </span>
                   </div>
@@ -1076,14 +1072,14 @@ export default function CompanyDetailsPage({
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-md bg-white overflow-hidden">
-            <CardHeader className="pb-2 bg-gradient-to-r from-slate-50 to-white">
-              <CardDescription className="text-slate-500 font-medium">
+          <Card className="border-0 shadow-md dark:bg-accent  overflow-hidden">
+            <CardHeader className="pb-2 ">
+              <CardDescription className="font-medium">
                 Team Size
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* <div className="text-2xl font-bold text-slate-900">
+              {/* <div className="text-2xl font-bold ">
                 {company.employeesRange || "Not specified"}
               </div>
               {company.founderName && (
@@ -1091,7 +1087,7 @@ export default function CompanyDetailsPage({
                   Founded by {company.founderName}
                 </p>
               )} */}
-              <div className="text-2xl font-bold text-slate-900">
+              <div className="text-2xl font-bold ">
                 {company?.employeesRange || "Not specified"}
               </div>
               {company?.founderName && (
@@ -1102,14 +1098,14 @@ export default function CompanyDetailsPage({
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-md bg-white overflow-hidden">
-            <CardHeader className="pb-2 bg-gradient-to-r from-slate-50 to-white">
-              <CardDescription className="text-slate-500 font-medium">
+          <Card className="border-0 shadow-md dark:bg-accent  overflow-hidden">
+            <CardHeader className="pb-2 ">
+              <CardDescription className="font-medium">
                 Business Model
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* <div className="text-2xl font-bold text-slate-900 truncate">
+              {/* <div className="text-2xl font-bold  truncate">
                 {company.businessModel === "Other"
                   ? company.otherBusinessModel
                   : company.businessModel || "Not specified"}
@@ -1120,7 +1116,7 @@ export default function CompanyDetailsPage({
                 </p>
               )} */}
 
-              <div className="text-2xl font-bold text-slate-900 truncate">
+              <div className="text-2xl font-bold  truncate">
                 {company?.businessModel === "Other"
                   ? company?.otherBusinessModel || "Not specified"
                   : company?.businessModel || "Not specified"}
@@ -1186,8 +1182,8 @@ export default function CompanyDetailsPage({
           <TabsContent value="overview" className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-8">
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border shadow-md overflow-hidden">
+                  <CardHeader className="dark:bg-accent border-b">
                     <CardTitle className="text-xl">Company Profile</CardTitle>
                   </CardHeader>
                   {/* <CardContent className="p-6">
@@ -1213,8 +1209,8 @@ export default function CompanyDetailsPage({
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border shadow-md overflow-hidden">
+                  <CardHeader className="dark:bg-accent border-b">
                     <CardTitle className="text-xl">Key Information</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -1228,7 +1224,7 @@ export default function CompanyDetailsPage({
                             {company.sector}
                             {company.otherSector && ` - ${company.otherSector}`}
                           </p> */}
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium ">
                             {company?.sector || "Sector not specified"}
                             {company?.otherSector &&
                               ` - ${company.otherSector}`}
@@ -1238,10 +1234,10 @@ export default function CompanyDetailsPage({
                           <h3 className="text-sm font-medium text-slate-500 mb-1">
                             Company Type
                           </h3>
-                          {/* <p className="font-medium text-slate-900">
+                          {/* <p className="font-medium ">
                             {company.type || "Not specified"}
                           </p> */}
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium ">
                             {company?.type || "Not specified"}
                           </p>
                         </div>
@@ -1249,12 +1245,12 @@ export default function CompanyDetailsPage({
                           <h3 className="text-sm font-medium text-slate-500 mb-1">
                             Founded
                           </h3>
-                          {/* <p className="font-medium text-slate-900">
+                          {/* <p className="font-medium ">
                             {company.foundedAt
                               ? formatDate(company.foundedAt)
                               : "Not specified"}
                           </p> */}
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium ">
                             {company && company.foundedAt
                               ? formatDate(company.foundedAt)
                               : "Not specified"}
@@ -1264,10 +1260,10 @@ export default function CompanyDetailsPage({
                           <h3 className="text-sm font-medium text-slate-500 mb-1">
                             Registration Number
                           </h3>
-                          {/* <p className="font-medium text-slate-900">
+                          {/* <p className="font-medium ">
                             {company.registrationNumber || "Not specified"}
                           </p> */}
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium ">
                             {company?.registrationNumber || "Not specified"}
                           </p>
                         </div>
@@ -1277,7 +1273,7 @@ export default function CompanyDetailsPage({
                           <h3 className="text-sm font-medium text-slate-500 mb-1">
                             Location
                           </h3>
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium ">
                             {company?.location || "Not specified"}
                           </p>
                         </div>
@@ -1285,7 +1281,7 @@ export default function CompanyDetailsPage({
                           <h3 className="text-sm font-medium text-slate-500 mb-1">
                             Team Size
                           </h3>
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium ">
                             {company?.employeesRange || "Not specified"}
                           </p>
                         </div>
@@ -1293,7 +1289,7 @@ export default function CompanyDetailsPage({
                           <h3 className="text-sm font-medium text-slate-500 mb-1">
                             Business Model
                           </h3>
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium ">
                             {company?.businessModel === "Other"
                               ? company?.otherBusinessModel || "Not specified"
                               : company?.businessModel || "Not specified"}
@@ -1303,7 +1299,7 @@ export default function CompanyDetailsPage({
                           <h3 className="text-sm font-medium text-slate-500 mb-1">
                             Head Office
                           </h3>
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium ">
                             {company?.headOfficeAddress || "Not specified"}
                           </p>
                         </div>
@@ -1314,8 +1310,8 @@ export default function CompanyDetailsPage({
               </div>
 
               <div className="space-y-8">
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border shadow-md overflow-hidden">
+                  <CardHeader className="dark:bg-accent border-b">
                     <CardTitle className="text-xl">Mission Statement</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -1342,8 +1338,8 @@ export default function CompanyDetailsPage({
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border shadow-md overflow-hidden">
+                  <CardHeader className="dark:bg-accent border-b">
                     <CardTitle className="text-xl">
                       Founder Information
                     </CardTitle>
@@ -1354,7 +1350,7 @@ export default function CompanyDetailsPage({
                         <h3 className="text-sm font-medium text-slate-500 mb-1">
                           Name
                         </h3>
-                        <p className="font-medium text-slate-900">
+                        <p className="font-medium ">
                           {company?.founderName || "Not specified"}
                         </p>
                       </div>
@@ -1364,7 +1360,7 @@ export default function CompanyDetailsPage({
                             <h3 className="text-sm font-medium text-slate-500 mb-1">
                               Founder Gender
                             </h3>
-                            <p className="font-medium text-slate-900">
+                            <p className="font-medium ">
                               {company.founderGender}
                             </p>
                           </div>
@@ -1374,7 +1370,7 @@ export default function CompanyDetailsPage({
                           <h3 className="text-sm font-medium text-slate-500 mb-1">
                             Age
                           </h3>
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium ">
                             {calculateAge(company.founderDob)} years old
                           </p>
                         </div>
@@ -1384,7 +1380,7 @@ export default function CompanyDetailsPage({
                           <h3 className="text-sm font-medium text-slate-500 mb-1">
                             Education
                           </h3>
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium ">
                             {company.founderEducation}
                           </p>
                         </div>
@@ -1394,8 +1390,8 @@ export default function CompanyDetailsPage({
                 </Card>
 
                 {/* Quick contact card */}
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">Quick Contact</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -1405,7 +1401,7 @@ export default function CompanyDetailsPage({
                           <p className="text-sm text-slate-500">Email</p>
                           <a
                             href={`mailto:${company.email}`}
-                            className="font-medium text-slate-900 hover:text-slate-700"
+                            className="font-medium  hover:text-slate-700"
                           >
                             {company.email}
                           </a>
@@ -1419,9 +1415,7 @@ export default function CompanyDetailsPage({
                         <div className="flex items-start">
                           <Phone className="h-5 w-5 text-slate-400 mr-3 mt-0.5" />
                           <div>
-                            <p className="font-medium text-slate-900">
-                              {company.phone}
-                            </p>
+                            <p className="font-medium ">{company.phone}</p>
                           </div>
                         </div>
                       )}
@@ -1433,7 +1427,7 @@ export default function CompanyDetailsPage({
                               href={company.website}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="font-medium text-slate-900 hover:text-slate-700"
+                              className="font-medium  hover:text-slate-700"
                             >
                               {company.website}
                             </a>
@@ -1452,8 +1446,8 @@ export default function CompanyDetailsPage({
           <TabsContent value="business" className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-8">
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">
                       Business Information
                     </CardTitle>
@@ -1507,7 +1501,7 @@ export default function CompanyDetailsPage({
                             <span className="text-slate-700">
                               Business Model
                             </span>
-                            <span className="font-medium text-slate-900">
+                            <span className="font-medium ">
                               {company?.businessModel === "Other"
                                 ? company?.otherBusinessModel || "Not specified"
                                 : company?.businessModel || "Not specified"}
@@ -1563,7 +1557,7 @@ export default function CompanyDetailsPage({
                             <span className="text-slate-700">
                               Sector Licenses
                             </span>
-                            <span className="font-medium text-slate-900">
+                            <span className="font-medium ">
                               {company?.sectorLicenses || "Not specified"}
                             </span>
                           </div>
@@ -1605,8 +1599,8 @@ export default function CompanyDetailsPage({
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">
                       Business Challenges
                     </CardTitle>
@@ -1636,8 +1630,8 @@ export default function CompanyDetailsPage({
               </div>
 
               <div>
-                <Card className="border-0 shadow-md overflow-hidden sticky top-6">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">Business Summary</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -1648,7 +1642,7 @@ export default function CompanyDetailsPage({
                         </h3>
                         <div className="flex items-center space-x-2">
                           <Building2 className="h-5 w-5 text-slate-400" />
-                          <span className="font-medium text-slate-900">
+                          <span className="font-medium ">
                             {company?.type || "Not specified"}
                           </span>
                         </div>
@@ -1660,14 +1654,14 @@ export default function CompanyDetailsPage({
                         </h3>
                         {/* <div className="flex items-center space-x-2">
                           <TrendingUp className="h-5 w-5 text-slate-400" />
-                          <span className="font-medium text-slate-900">
+                          <span className="font-medium ">
                             {company.stage || "Not specified"}
                           </span>
                         </div> */}
                         {company && (
                           <div className="flex items-center space-x-2">
                             <TrendingUp className="h-5 w-5 text-slate-400" />
-                            <span className="font-medium text-slate-900">
+                            <span className="font-medium ">
                               {company.stage || "Not specified"}
                             </span>
                           </div>
@@ -1680,11 +1674,11 @@ export default function CompanyDetailsPage({
                         </h3>
                         {/* <div className="flex items-center space-x-2">
                           <Calendar className="h-5 w-5 text-slate-400" />
-                          <span className="font-medium text-slate-900">
+                          <span className="font-medium ">
                             {getBusinessAge(company.foundedAt)}
                           </span>
                         </div> */}
-                        <span className="font-medium text-slate-900">
+                        <span className="font-medium ">
                           {company?.foundedAt
                             ? getBusinessAge(company.foundedAt)
                             : "Not specified"}
@@ -1697,11 +1691,11 @@ export default function CompanyDetailsPage({
                         </h3>
                         {/* <div className="flex items-center space-x-2">
                           <Users className="h-5 w-5 text-slate-400" />
-                          <span className="font-medium text-slate-900">
+                          <span className="font-medium ">
                             {company.employeesRange || "Not specified"}
                           </span>
                         </div> */}
-                        <span className="font-medium text-slate-900">
+                        <span className="font-medium ">
                           {company?.employeesRange || "Not specified"}
                         </span>
                       </div>
@@ -1813,8 +1807,8 @@ export default function CompanyDetailsPage({
           <TabsContent value="financial" className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-8">
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">
                       Financial Overview
                     </CardTitle>
@@ -1826,7 +1820,7 @@ export default function CompanyDetailsPage({
                           <h3 className="text-sm font-medium text-slate-500 mb-1">
                             Funding Status
                           </h3>
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium ">
                             {company?.fundingStatus || "Not specified"}
                           </p>
                         </div>
@@ -1834,7 +1828,7 @@ export default function CompanyDetailsPage({
                           <h3 className="text-sm font-medium text-slate-500 mb-1">
                             Amount Raised
                           </h3>
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium ">
                             {formatCurrency(company?.amountRaised ?? 0)}
                           </p>
                         </div>
@@ -1842,7 +1836,7 @@ export default function CompanyDetailsPage({
                           <h3 className="text-sm font-medium text-slate-500 mb-1">
                             Funding Needed
                           </h3>
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium ">
                             {formatCurrency(company?.fundingNeeded)}
                           </p>
                         </div>
@@ -1911,7 +1905,7 @@ export default function CompanyDetailsPage({
                             Financial Records
                           </h3>
                           {company ? (
-                            <p className="font-medium text-slate-900">
+                            <p className="font-medium ">
                               {company.keepsFinancialRecords || "Not specified"}
                             </p>
                           ) : (
@@ -1925,8 +1919,8 @@ export default function CompanyDetailsPage({
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">Annual Turnover</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -1939,7 +1933,7 @@ export default function CompanyDetailsPage({
                         </CardHeader>
                         <CardContent>
                           {company ? (
-                            <div className="text-xl font-bold text-slate-900">
+                            <div className="text-xl font-bold ">
                               {company.annualTurnoverBefore || "Not specified"}
                             </div>
                           ) : (
@@ -1956,7 +1950,7 @@ export default function CompanyDetailsPage({
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-xl font-bold text-slate-900">
+                          <div className="text-xl font-bold ">
                             {company?.annualTurnoverCurrent || "Not specified"}
                           </div>
                         </CardContent>
@@ -1968,7 +1962,7 @@ export default function CompanyDetailsPage({
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-xl font-bold text-slate-900">
+                          <div className="text-xl font-bold ">
                             {company?.annualTurnoverNext || "Not specified"}
                           </div>
                         </CardContent>
@@ -1977,8 +1971,8 @@ export default function CompanyDetailsPage({
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">
                       External Funding Sources
                     </CardTitle>
@@ -2017,8 +2011,8 @@ export default function CompanyDetailsPage({
               </div>
 
               <div>
-                <Card className="border-0 shadow-md overflow-hidden sticky top-6">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">
                       Financial Documents
                     </CardTitle>
@@ -2030,7 +2024,7 @@ export default function CompanyDetailsPage({
                           <div className="flex items-center">
                             <FileText className="h-5 w-5 text-slate-400 mr-3" />
                             <div>
-                              <h3 className="font-medium text-slate-900">
+                              <h3 className="font-medium ">
                                 Funding Documents
                               </h3>
                               <p className="text-sm text-slate-500">
@@ -2056,9 +2050,7 @@ export default function CompanyDetailsPage({
                           <div className="flex items-center">
                             <FileText className="h-5 w-5 text-slate-400 mr-3" />
                             <div>
-                              <h3 className="font-medium text-slate-900">
-                                Pitch Deck
-                              </h3>
+                              <h3 className="font-medium ">Pitch Deck</h3>
                               <p className="text-sm text-slate-500">
                                 Company presentation for investors
                               </p>
@@ -2080,7 +2072,7 @@ export default function CompanyDetailsPage({
                       {!company?.fundingDocuments && !company?.pitchDeck && (
                         <div className="flex flex-col items-center justify-center py-8 text-center">
                           <FileText className="h-12 w-12 text-slate-300 mb-4" />
-                          <h3 className="font-medium text-lg mb-2 text-slate-900">
+                          <h3 className="font-medium text-lg mb-2 ">
                             No documents available
                           </h3>
                           <p className="text-slate-500 max-w-md">
@@ -2106,8 +2098,8 @@ export default function CompanyDetailsPage({
           <TabsContent value="innovation" className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-8">
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">Innovation</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -2170,8 +2162,8 @@ export default function CompanyDetailsPage({
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">
                       Social & Environmental Impact
                     </CardTitle>
@@ -2249,8 +2241,8 @@ export default function CompanyDetailsPage({
               </div>
 
               <div>
-                <Card className="border-0 shadow-md overflow-hidden sticky top-6">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">
                       Ecosystem Participation
                     </CardTitle>
@@ -2360,8 +2352,8 @@ export default function CompanyDetailsPage({
 
           {/* Documents Tab */}
           <TabsContent value="documents" className="space-y-8">
-            <Card className="border-0 shadow-md overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+            <Card className="dark:border  shadow-md overflow-hidden">
+              <CardHeader className="bg-accent border-b">
                 <CardTitle className="text-xl">Company Documents</CardTitle>
                 <CardDescription>
                   Important documents and resources
@@ -2376,9 +2368,7 @@ export default function CompanyDetailsPage({
                           <FileText className="h-8 w-8 text-slate-400" />
                         </div>
                         <div>
-                          <h3 className="font-medium text-slate-900">
-                            Funding Documents
-                          </h3>
+                          <h3 className="font-medium ">Funding Documents</h3>
                           <p className="text-sm text-slate-500">
                             Investment plan and funding details
                           </p>
@@ -2413,9 +2403,7 @@ export default function CompanyDetailsPage({
                           <FileText className="h-8 w-8 text-slate-400" />
                         </div>
                         <div>
-                          <h3 className="font-medium text-slate-900">
-                            Pitch Deck
-                          </h3>
+                          <h3 className="font-medium ">Pitch Deck</h3>
                           <p className="text-sm text-slate-500">
                             Company presentation for investors
                           </p>
@@ -2448,7 +2436,7 @@ export default function CompanyDetailsPage({
                       <div className="bg-slate-50 p-6 rounded-full mb-4">
                         <FileText className="h-16 w-16 text-slate-300" />
                       </div>
-                      <h3 className="font-medium text-xl mb-2 text-slate-900">
+                      <h3 className="font-medium text-xl mb-2 ">
                         No documents available
                       </h3>
                       <p className="text-slate-500 max-w-md">
@@ -2461,7 +2449,7 @@ export default function CompanyDetailsPage({
               {user?.id && company?.userId && user.id === company.userId && (
                 <CardFooter className="bg-slate-50 border-t p-6">
                   <div className="w-full">
-                    <h3 className="font-medium text-slate-900 mb-2">
+                    <h3 className="font-medium  mb-2">
                       Upload Company Documents
                     </h3>
                     <p className="text-sm text-slate-500 mb-4">
@@ -2481,8 +2469,8 @@ export default function CompanyDetailsPage({
           <TabsContent value="contact" className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-8">
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">
                       Contact Information
                     </CardTitle>
@@ -2490,9 +2478,7 @@ export default function CompanyDetailsPage({
                   <CardContent className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-6">
-                        <h3 className="font-semibold text-slate-900">
-                          Company Contact
-                        </h3>
+                        <h3 className="font-semibold ">Company Contact</h3>
                         <div className="space-y-4">
                           <div className="flex items-start">
                             <div className="bg-slate-50 p-2 rounded-lg mr-4">
@@ -2503,7 +2489,7 @@ export default function CompanyDetailsPage({
                               {company?.email ? (
                                 <a
                                   href={`mailto:${company.email}`}
-                                  className="font-medium text-slate-900 hover:text-slate-700"
+                                  className="font-medium  hover:text-slate-700"
                                 >
                                   {company.email}
                                 </a>
@@ -2523,7 +2509,7 @@ export default function CompanyDetailsPage({
                                 <p className="text-sm text-slate-500">Phone</p>
                                 <a
                                   href={`tel:${company.phone}`}
-                                  className="font-medium text-slate-900 hover:text-slate-700"
+                                  className="font-medium  hover:text-slate-700"
                                 >
                                   {company.phone}
                                 </a>
@@ -2540,7 +2526,7 @@ export default function CompanyDetailsPage({
                                 <p className="text-sm text-slate-500">
                                   Address
                                 </p>
-                                <p className="font-medium text-slate-900">
+                                <p className="font-medium ">
                                   {company.address}
                                 </p>
                               </div>
@@ -2560,7 +2546,7 @@ export default function CompanyDetailsPage({
                                   href={company.website}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="font-medium text-slate-900 hover:text-slate-700 flex items-center"
+                                  className="font-medium  hover:text-slate-700 flex items-center"
                                 >
                                   {company.website.replace(/^https?:\/\//, "")}
                                   <ExternalLink className="ml-1 h-3 w-3" />
@@ -2572,9 +2558,7 @@ export default function CompanyDetailsPage({
                       </div>
 
                       <div className="space-y-6">
-                        <h3 className="font-semibold text-slate-900">
-                          Social Media
-                        </h3>
+                        <h3 className="font-semibold ">Social Media</h3>
                         <div className="space-y-4">
                           {Array.isArray(company?.socialLinks) &&
                           company.socialLinks.length > 0 ? (
@@ -2599,7 +2583,7 @@ export default function CompanyDetailsPage({
                                       href={social.link}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="font-medium text-slate-900 hover:text-slate-700 flex items-center"
+                                      className="font-medium  hover:text-slate-700 flex items-center"
                                     >
                                       {social.link.replace(/^https?:\/\//, "")}
                                       <ExternalLink className="ml-1 h-3 w-3" />
@@ -2618,8 +2602,8 @@ export default function CompanyDetailsPage({
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">Contact Form</CardTitle>
                     <CardDescription>
                       Send a message to this company
@@ -2694,8 +2678,8 @@ export default function CompanyDetailsPage({
               </div>
 
               <div>
-                <Card className="border-0 shadow-md overflow-hidden sticky top-6">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">Location</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -2715,7 +2699,7 @@ export default function CompanyDetailsPage({
                             <h3 className="text-sm font-medium text-slate-500 mb-1">
                               Address
                             </h3>
-                            <p className="text-slate-900">{company.address}</p>
+                            <p className="">{company.address}</p>
                           </div>
                         )}
 
@@ -2738,7 +2722,7 @@ export default function CompanyDetailsPage({
                     ) : (
                       <div className="flex flex-col items-center justify-center py-8 text-center">
                         <MapPin className="h-12 w-12 text-slate-300 mb-4" />
-                        <h3 className="font-medium text-lg mb-2 text-slate-900">
+                        <h3 className="font-medium text-lg mb-2 ">
                           No location specified
                         </h3>
                         <p className="text-slate-500 max-w-md">
@@ -2754,8 +2738,8 @@ export default function CompanyDetailsPage({
 
           {/* Funding Rounds Tab */}
           <TabsContent value="funding" className="space-y-8">
-            <Card className="border-0 shadow-md overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+            <Card className="dark:border  shadow-md overflow-hidden">
+              <CardHeader className="bg-accent border-b">
                 <CardTitle className="text-xl">Funding Rounds</CardTitle>
                 <CardDescription>
                   Investment history and funding details
@@ -2770,13 +2754,13 @@ export default function CompanyDetailsPage({
                     </div>
                   </div>
                 ) : rounds.length > 0 ? (
-                  <RoundsTable rounds={rounds} />
+                  <RoundsTable rounds={rounds} loading={loading} />
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="bg-slate-50 p-6 rounded-full mb-4">
                       <FileText className="h-16 w-16 text-slate-300" />
                     </div>
-                    <h3 className="font-medium text-xl mb-2 text-slate-900">
+                    <h3 className="font-medium text-xl mb-2 ">
                       No funding rounds
                     </h3>
                     <p className="text-slate-500 max-w-md">
@@ -2788,7 +2772,7 @@ export default function CompanyDetailsPage({
               {user?.id === company?.userId && (
                 <CardFooter className="bg-slate-50 border-t p-6">
                   <div className="w-full">
-                    <h3 className="font-medium text-slate-900 mb-2">
+                    <h3 className="font-medium  mb-2">
                       Record a New Funding Round
                     </h3>
                     <p className="text-sm text-slate-500 mb-4">
@@ -2805,8 +2789,8 @@ export default function CompanyDetailsPage({
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2">
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">Funding Summary</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -2867,7 +2851,7 @@ export default function CompanyDetailsPage({
                         <h3 className="text-sm font-medium text-slate-500 mb-2">
                           External Funding Sources
                         </h3>
-                        {company?.externalFunding?.length > 0 ? (
+                        {/* {company?.externalFunding?.length > 0 ? (
                           <div className="flex flex-wrap gap-2">
                             {company.externalFunding.map((source, index) => (
                               <Badge
@@ -2892,7 +2876,7 @@ export default function CompanyDetailsPage({
                           <p className="text-slate-500 italic">
                             No external funding sources specified
                           </p>
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </CardContent>
@@ -2900,8 +2884,8 @@ export default function CompanyDetailsPage({
               </div>
 
               <div>
-                <Card className="border-0 shadow-md overflow-hidden sticky top-6">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="dark:border  shadow-md overflow-hidden">
+                  <CardHeader className="bg-accent border-b">
                     <CardTitle className="text-xl">
                       Investment Opportunity
                     </CardTitle>
@@ -2912,7 +2896,7 @@ export default function CompanyDetailsPage({
                         <h3 className="text-sm font-medium text-slate-500 mb-2">
                           Funding Needed
                         </h3>
-                        <p className="font-medium text-slate-900">
+                        <p className="font-medium ">
                           {formatCurrency(company?.fundingNeeded ?? 0)}
                         </p>
                       </div>

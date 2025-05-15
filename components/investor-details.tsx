@@ -57,7 +57,7 @@ export default function InvestorDetails({ investor }: InvestorDetailsProps) {
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      await deleteInvestor(investor.id);
+      await deleteInvestor(investor?._id);
       router.push("/investors");
       router.refresh();
     } catch (error) {
@@ -67,7 +67,7 @@ export default function InvestorDetails({ investor }: InvestorDetailsProps) {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="p-6">
       <div className="flex flex-col gap-6">
         {/* Header with navigation */}
         <div className="flex items-center justify-between">
@@ -79,7 +79,7 @@ export default function InvestorDetails({ investor }: InvestorDetailsProps) {
           </Button>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/investors/${investor.id}/edit`}>
+              <Link href={`/investors/${investor?._id}/edit`}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </Link>
@@ -121,10 +121,10 @@ export default function InvestorDetails({ investor }: InvestorDetailsProps) {
             <CardHeader className="pb-2">
               <div className="flex flex-col items-center text-center">
                 <div className="relative w-24 h-24 rounded-md overflow-hidden bg-muted mb-4 flex items-center justify-center">
-                  {investor.logo ? (
+                  {investor?.logo ? (
                     <Image
-                      src={investor.logo || "/placeholder.svg"}
-                      alt={`${investor.name} logo`}
+                      src={investor?.logo || "/placeholder.svg"}
+                      alt={`${investor?.name} logo`}
                       fill
                       className="object-cover"
                     />
@@ -132,77 +132,77 @@ export default function InvestorDetails({ investor }: InvestorDetailsProps) {
                     <Building2 className="h-12 w-12 text-muted-foreground" />
                   )}
                 </div>
-                <CardTitle className="text-xl">{investor.name}</CardTitle>
-                {investor.type && (
+                <CardTitle className="text-xl">{investor?.name}</CardTitle>
+                {investor?.type && (
                   <CardDescription className="text-sm">
-                    {investor.type}
+                    {investor?.type}
                   </CardDescription>
                 )}
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {investor.location && (
+                {investor?.location && (
                   <div className="flex items-center text-sm">
                     <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>{investor.location}</span>
+                    <span>{investor?.location}</span>
                   </div>
                 )}
-                {investor.foundedAt && (
+                {investor?.foundedAt && (
                   <div className="flex items-center text-sm">
                     <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>Founded {investor.foundedAt}</span>
+                    <span>Founded {investor?.foundedAt}</span>
                   </div>
                 )}
-                {investor.website && (
+                {investor?.website && (
                   <div className="flex items-center text-sm">
                     <Globe className="h-4 w-4 mr-2 text-muted-foreground" />
                     <a
                       href={
-                        investor.website.startsWith("http")
-                          ? investor.website
-                          : `https://${investor.website}`
+                        investor?.website.startsWith("http")
+                          ? investor?.website
+                          : `https://${investor?.website}`
                       }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline flex items-center"
                     >
-                      {investor.website.replace(/^https?:\/\//, "")}
+                      {investor?.website.replace(/^https?:\/\//, "")}
                       <ExternalLink className="h-3 w-3 ml-1" />
                     </a>
                   </div>
                 )}
-                {investor.email && (
+                {investor?.email && (
                   <div className="flex items-center text-sm">
                     <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
                     <a
-                      href={`mailto:${investor.email}`}
+                      href={`mailto:${investor?.email}`}
                       className="text-primary hover:underline"
                     >
-                      {investor.email}
+                      {investor?.email}
                     </a>
                   </div>
                 )}
-                {investor.phone && (
+                {investor?.phone && (
                   <div className="flex items-center text-sm">
                     <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
                     <a
-                      href={`tel:${investor.phone}`}
+                      href={`tel:${investor?.phone}`}
                       className="text-primary hover:underline"
                     >
-                      {investor.phone}
+                      {investor?.phone}
                     </a>
                   </div>
                 )}
               </div>
 
-              {investor.socialLinks && investor.socialLinks.length > 0 && (
+              {investor?.socialLinks && investor?.socialLinks.length > 0 && (
                 <>
                   <Separator className="my-4" />
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium">Social Links</h4>
                     <div className="flex flex-wrap gap-2">
-                      {investor.socialLinks.map((social, index) => (
+                      {investor?.socialLinks.map((social, index) => (
                         <Button key={index} variant="outline" size="sm" asChild>
                           <a
                             href={social.link}
@@ -225,19 +225,19 @@ export default function InvestorDetails({ investor }: InvestorDetailsProps) {
           <Card className="md:col-span-2">
             <CardHeader>
               <CardTitle>Investor Profile</CardTitle>
-              {investor.registrationNumber && (
+              {investor?.registrationNumber && (
                 <CardDescription>
-                  Registration: {investor.registrationNumber}
+                  Registration: {investor?.registrationNumber}
                 </CardDescription>
               )}
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Description */}
-              {investor.description && (
+              {investor?.description && (
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">About</h3>
                   <p className="text-sm text-muted-foreground whitespace-pre-line">
-                    {investor.description}
+                    {investor?.description}
                   </p>
                 </div>
               )}
@@ -246,41 +246,41 @@ export default function InvestorDetails({ investor }: InvestorDetailsProps) {
               <div className="space-y-2">
                 <h3 className="text-sm font-medium">Investment Preferences</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {investor.stage && (
+                  {investor?.stage && (
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground">
                         Preferred Stage
                       </p>
-                      <p className="text-sm font-medium">{investor.stage}</p>
+                      <p className="text-sm font-medium">{investor?.stage}</p>
                     </div>
                   )}
-                  {investor.fundingCapacity && (
+                  {investor?.fundingCapacity && (
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground">
                         Funding Capacity
                       </p>
                       <p className="text-sm font-medium">
-                        {investor.fundingCapacity}
+                        {investor?.fundingCapacity}
                       </p>
                     </div>
                   )}
-                  {investor.amountRaised !== undefined && (
+                  {investor?.amountRaised !== undefined && (
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground">
                         Amount Raised
                       </p>
                       <p className="text-sm font-medium">
-                        ${investor.amountRaised.toLocaleString()}
+                        ${investor?.amountRaised.toLocaleString()}
                       </p>
                     </div>
                   )}
-                  {investor.goalExpected && (
+                  {investor?.goalExpected && (
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground">
                         Investment Goal
                       </p>
                       <p className="text-sm font-medium">
-                        {investor.goalExpected}
+                        {investor?.goalExpected}
                       </p>
                     </div>
                   )}
@@ -288,12 +288,12 @@ export default function InvestorDetails({ investor }: InvestorDetailsProps) {
               </div>
 
               {/* Sectors */}
-              {investor.sectorInterested &&
-                investor.sectorInterested.length > 0 && (
+              {investor?.sectorInterested &&
+                investor?.sectorInterested.length > 0 && (
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium">Sectors of Interest</h3>
                     <div className="flex flex-wrap gap-2">
-                      {investor.sectorInterested.map((sector, index) => (
+                      {investor?.sectorInterested.map((sector, index) => (
                         <Badge key={index} variant="secondary">
                           {sector}
                         </Badge>
@@ -303,12 +303,12 @@ export default function InvestorDetails({ investor }: InvestorDetailsProps) {
                 )}
 
               {/* Documents */}
-              {(investor.profileDocuments ||
-                investor.businessRegistrationDocuments) && (
+              {(investor?.profileDocuments ||
+                investor?.businessRegistrationDocuments) && (
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Documents</h3>
                   <div className="flex flex-wrap gap-2">
-                    {investor.profileDocuments && (
+                    {investor?.profileDocuments && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -316,7 +316,7 @@ export default function InvestorDetails({ investor }: InvestorDetailsProps) {
                         asChild
                       >
                         <a
-                          href={investor.profileDocuments}
+                          href={investor?.profileDocuments}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -325,7 +325,7 @@ export default function InvestorDetails({ investor }: InvestorDetailsProps) {
                         </a>
                       </Button>
                     )}
-                    {investor.businessRegistrationDocuments && (
+                    {investor?.businessRegistrationDocuments && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -333,7 +333,7 @@ export default function InvestorDetails({ investor }: InvestorDetailsProps) {
                         asChild
                       >
                         <a
-                          href={investor.businessRegistrationDocuments}
+                          href={investor?.businessRegistrationDocuments}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -347,11 +347,11 @@ export default function InvestorDetails({ investor }: InvestorDetailsProps) {
               )}
 
               {/* Address */}
-              {investor.address && (
+              {investor?.address && (
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Address</h3>
                   <p className="text-sm text-muted-foreground whitespace-pre-line">
-                    {investor.address}
+                    {investor?.address}
                   </p>
                 </div>
               )}

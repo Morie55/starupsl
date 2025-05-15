@@ -5174,15 +5174,16 @@ import CompanyEditForm from "@/components/company-edit-form";
 export default async function CompanyEditPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const id = (await params).id;
   // Fetch the company data server-side
-  const companyData = await getCompany(params.id);
+  const companyData = await getCompany(id);
 
   // If company not found, show 404
-  if (!companyData || !companyData.success) {
-    notFound();
-  }
+  // if (!companyData || !companyData.success) {
+  //   notFound();
+  // }
 
-  return <CompanyEditForm company={companyData.company} />;
+  return <CompanyEditForm company={companyData} />;
 }

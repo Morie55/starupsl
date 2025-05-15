@@ -366,7 +366,11 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
               <CardTitle>Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full">Invite Investors</Button>
+              <Button className="w-full">
+                <Link href={`/investor-interest?roundId=${round._id}`}>
+                  Show Interest
+                </Link>
+              </Button>
               <Button variant="outline" className="w-full">
                 Generate Term Sheet
               </Button>

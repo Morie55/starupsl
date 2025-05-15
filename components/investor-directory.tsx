@@ -173,7 +173,7 @@ export default function InvestorDirectory() {
       {/* Investors grid */}
       <div className="flex-1">
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2  gap-6">
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
@@ -182,7 +182,7 @@ export default function InvestorDirectory() {
             ))}
           </div>
         ) : investors.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {investors.map((investor) => (
               <InvestorCard key={investor._id} investor={investor} />
             ))}

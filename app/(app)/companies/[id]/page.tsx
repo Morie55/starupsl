@@ -9,7 +9,7 @@ export default async function CompanyDetail({
   const { id } = await params;
   // Find company by ID from the params
 
-  const { company } = await getCompanyByIdAction(id);
+  const company = await getCompanyByIdAction(id);
 
   return (
     <div className="">
