@@ -98,7 +98,7 @@ export function EventsPage() {
         </div>
       </div>
 
-      <Card>
+      <Card className="border-0 shadow-none">
         <CardHeader>
           <CardTitle>Upcoming Events</CardTitle>
           <CardDescription>

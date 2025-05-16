@@ -5592,7 +5592,7 @@ const companyFormSchema = z.object({
 
   // Step 2: Contact Information
   email: z.string().email("Invalid email address"),
-  phone: z.string().min(5, "Phone number is too short").optional(),
+  phone: z.string().min(5, "Phone number is too short").optionFal(),
   address: z.string().min(5, "Address is too short").optional(),
   website: z.string().url("Invalid website URL").optional().or(z.literal("")),
   socialLinks: z
