@@ -5574,10 +5574,14 @@ import {
   companyStages,
   companyTypes,
   fundingStatus,
-  investmentTypes,
+  investorTypes,
 } from "@/data";
 import { useUser } from "@clerk/nextjs";
-
+import {
+  loadCompanyProgress,
+  saveCompanyProgress,
+} from "@/app/actions/company-actions";
+const investmentTypes: any = [];
 // Enhanced Company form schema with all new fields
 const companyFormSchema = z.object({
   // Step 1: Basic Information
@@ -5592,7 +5596,7 @@ const companyFormSchema = z.object({
 
   // Step 2: Contact Information
   email: z.string().email("Invalid email address"),
-  phone: z.string().min(5, "Phone number is too short").optionFal(),
+  phone: z.string().min(5, "Phone number is too short").optional(),
   address: z.string().min(5, "Address is too short").optional(),
   website: z.string().url("Invalid website URL").optional().or(z.literal("")),
   socialLinks: z
@@ -5809,7 +5813,7 @@ export default function OnboardingPage() {
   // Load saved progress on component mount
   useEffect(() => {
     loadProgress();
-  }, []);
+  }, [user]);
 
   // Company form with enhanced default values
   const companyForm = useForm<CompanyFormData>({
@@ -6197,8 +6201,9 @@ export default function OnboardingPage() {
   };
 
   const saveProgressDebounced = debounce(() => {
-    saveProgress();
-  }, 1500); // Save after 1.5 seconds of inactivity
+    // saveProgress();
+  }, 1500);
+  // Save after 1.5 seconds of inactivity
 
   // Auto-save company form changes
   useEffect(() => {
@@ -6233,54 +6238,39 @@ export default function OnboardingPage() {
     };
   }, [selectedSectors, socialLinks, step]);
 
-  const saveProgress = () => {
+  const saveProgress = async () => {
     try {
       setIsSaving(true);
-
-      // Save entity type
-      localStorage.setItem("onboarding_entityType", entityType || "");
-
-      // Save current step
-      localStorage.setItem("onboarding_step", step.toString());
-
-      // Save selected sectors for investor
-      localStorage.setItem(
-        "onboarding_selectedSectors",
-        JSON.stringify(selectedSectors)
-      );
-
-      // Save social links
-      localStorage.setItem(
-        "onboarding_socialLinks",
-        JSON.stringify(socialLinks)
-      );
+      const cdata: any = {
+        userId: user?.id,
+        entityType: entityType,
+        step: step,
+        selectedSectors: selectedSectors,
+        socialLinks: socialLinks,
+      };
 
       // Save form data based on entity type
       if (entityType === "company") {
-        localStorage.setItem(
-          "onboarding_companyData",
-          JSON.stringify(companyForm.getValues())
-        );
+        cdata.companyData = JSON.stringify(companyForm.getValues());
       } else if (entityType === "investor") {
-        localStorage.setItem(
-          "onboarding_investorData",
-          JSON.stringify(investorForm.getValues())
-        );
+        cdata.investorData = JSON.stringify(investorForm.getValues());
       }
+
+      await saveCompanyProgress(user?.id!, cdata);
 
       // Update last saved timestamp
       const now = new Date();
       setLastSaved(now);
 
       // Only show toast for manual saves
-      if (saveProgressDebounced.flush) {
-        toast({
-          title: "Progress saved",
-          description: "You can continue from this point later.",
-        });
-      }
-
-      setTimeout(() => setIsSaving(false), 500);
+      // if (saveProgressDebounced.flush) {
+      //   toast({
+      //     title: "Progress saved",
+      //     description: "You can continue from this point later.",
+      //   });
+      // }
+      setIsSaving(false);
+      // setTimeout(() => setIsSaving(false), 500);
     } catch (error) {
       console.error("Error saving progress:", error);
       setIsSaving(false);
@@ -6292,37 +6282,47 @@ export default function OnboardingPage() {
     }
   };
 
-  const loadProgress = () => {
+  const loadProgress = async () => {
+    const companyProgress = await loadCompanyProgress(user?.id!);
+
     try {
       // Load entity type
-      const savedEntityType = localStorage.getItem("onboarding_entityType");
+      // const savedEntityType = localStorage.getItem("onboarding_entityType");
+      const savedEntityType = companyProgress.entityType;
       if (savedEntityType) {
         setEntityType(savedEntityType as EntityType);
       }
 
       // Load current step
-      const savedStep = localStorage.getItem("onboarding_step");
+      // const savedStep = localStorage.getItem("onboarding_step");
+      const savedStep = companyProgress.step;
       if (savedStep) {
-        setStep(Number.parseInt(savedStep, 10));
+        setStep(savedStep);
       }
 
       // Load selected sectors for investor
-      const savedSectors = localStorage.getItem("onboarding_selectedSectors");
+      // const savedSectors = localStorage.getItem("onboarding_selectedSectors");
+      const savedSectors = companyProgress.selectedSectors;
       if (savedSectors) {
-        setSelectedSectors(JSON.parse(savedSectors));
+        // setSelectedSectors(JSON.parse(savedSectors));
+        setSelectedSectors(savedSectors);
       }
 
       // Load social links
-      const savedSocialLinks = localStorage.getItem("onboarding_socialLinks");
+      // const savedSocialLinks = localStorage.getItem("onboarding_socialLinks");
+      const savedSocialLinks = companyProgress.socialLinks;
       if (savedSocialLinks) {
-        setSocialLinks(JSON.parse(savedSocialLinks));
+        // setSocialLinks(JSON.parse(savedSocialLinks));
+        setSocialLinks(savedSocialLinks);
       }
 
       // Load form data based on entity type
       if (savedEntityType === "company") {
-        const savedCompanyData = localStorage.getItem("onboarding_companyData");
+        // const savedCompanyData = localStorage.getItem("onboarding_companyData");
+        const savedCompanyData = companyProgress.companyData;
         if (savedCompanyData) {
           const parsedData = JSON.parse(savedCompanyData);
+          // const parsedData = savedCompanyData;
 
           // Handle date conversion for foundedAt and founderDob
           if (parsedData.foundedAt) {
@@ -6335,9 +6335,10 @@ export default function OnboardingPage() {
           companyForm.reset(parsedData);
         }
       } else if (savedEntityType === "investor") {
-        const savedInvestorData = localStorage.getItem(
-          "onboarding_investorData"
-        );
+        // const savedInvestorData = localStorage.getItem(
+        //   "onboarding_investorData"
+        // );
+        const savedInvestorData = companyProgress.investorData;
         if (savedInvestorData) {
           const parsedData = JSON.parse(savedInvestorData);
 
@@ -6378,20 +6379,10 @@ export default function OnboardingPage() {
             data.addressesEnvironmentalSustainability === "Yes",
           joinEcosystemPrograms: data.joinEcosystemPrograms === "Yes",
         });
-
         if (result.success) {
-          clearProgress(); // Clear saved progress after successful submission
-          toast({
-            title: "Success!",
-            description: "Your company profile has been created successfully.",
-          });
-          router.push(`/companies/${result.companyId}`);
+          router.push(`/companies/${result?.companyId}`);
         } else {
-          toast({
-            title: "Error",
-            description: result.error || "Failed to create company profile",
-            variant: "destructive",
-          });
+          alert("failrf");
         }
       } else if (entityType === "investor") {
         data.socialLinks = socialLinks.filter((link) => link.name && link.link);
@@ -6402,15 +6393,11 @@ export default function OnboardingPage() {
           ...data,
           userId: user?.id,
         });
-
+        alert("invest sucess");
         if (result.success) {
-          clearProgress(); // Clear saved progress after successful submission
-          toast({
-            title: "Success!",
-            description: "Your investor profile has been created successfully.",
-          });
           router.push(`/investors/${result.investorId}`);
         } else {
+          alert("none sucess");
           toast({
             title: "Error",
             description: result.error || "Failed to create investor profile",
@@ -7758,9 +7745,10 @@ export default function OnboardingPage() {
                         <div className="space-y-4">
                           <div className="space-y-2">
                             <Label htmlFor="annualTurnoverBefore">
-                              Annual Turnover Before{" "}
+                              Annual Turnover Year Before (Estimate){" "}
                               <span className="text-red-500">*</span>
                             </Label>
+
                             <Select
                               onValueChange={(value) =>
                                 companyForm.setValue(
@@ -9079,7 +9067,7 @@ export default function OnboardingPage() {
                                 <SelectValue placeholder="Select your investor type" />
                               </SelectTrigger>
                               <SelectContent>
-                                {investmentTypes.map((type) => (
+                                {investorTypes.map((type: any) => (
                                   <SelectItem key={type} value={type}>
                                     {type}
                                   </SelectItem>
@@ -9457,16 +9445,16 @@ export default function OnboardingPage() {
                       {step === 1 ? "Back to Selection" : "Previous"}
                     </Button>
 
-                    {lastSaved && !isSaving && (
+                    {/* {lastSaved && !isSaving && (
                       <p className="ml-4 text-xs text-muted-foreground">
                         Last saved: {lastSaved.toLocaleTimeString()}
                       </p>
-                    )}
-                    {isSaving && (
+                    )} */}
+                    {/* {isSaving && (
                       <p className="ml-4 text-xs text-muted-foreground animate-pulse">
                         Saving...
                       </p>
-                    )}
+                    )} */}
                   </div>
 
                   <div className="flex gap-2">
@@ -9476,7 +9464,7 @@ export default function OnboardingPage() {
                         variant="outline"
                         onClick={saveProgress}
                       >
-                        Save Progress
+                        {isSaving ? " Saving Progress" : " Save Progress"}
                       </Button>
                     )}
 

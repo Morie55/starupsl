@@ -7,7 +7,6 @@ import Company from "@/models/Company";
 import { connect } from "@/lib/mongoDB";
 // import mongoose from "mongoose";
 
-// Define CompanyType interface that was missing
 interface CompanyType {
   _id: string;
   userId: string;
@@ -94,6 +93,46 @@ export const getCompany = async (id: string) => {
   }
 };
 
+export async function loadCompanyProgress(userId: string) {
+  try {
+    await connect();
+    const data = await OnboardingProgress.findOne({ userId });
+    if (!data) return null;
+
+    return JSON.parse(JSON.stringify(data));
+  } catch (error) {
+    console.error("Error loading or creating company progress:", error);
+    return null;
+  }
+}
+export async function saveCompanyProgress(userId: string, formData: any) {
+  try {
+    await connect();
+
+    const existing = await OnboardingProgress.findOne({ userId });
+
+    if (existing) {
+      // Update existing progress
+      existing.entityType = formData.entityType;
+      existing.step = formData.step;
+      existing.selectedSectors = formData.selectedSectors;
+      existing.socialLinks = formData.socialLinks;
+      existing.companyData = formData.companyData;
+      existing.investorData = formData.investorData;
+
+      await existing.save();
+    } else {
+      // Create new progress document
+      await OnboardingProgress.create(formData);
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error saving company progress:", error);
+    return { success: false, message: error.message };
+  }
+}
+
 // Add a new company
 export async function createCompany(data: any) {
   try {
@@ -147,7 +186,7 @@ export async function createCompany(data: any) {
       },
     });
 
-    return JSON.parse(JSON.stringify({ success: true, company }));
+    return JSON.parse(JSON.stringify({ success: true, company: company }));
   } catch (error) {
     console.error("Error creating company:", error);
     return { success: false, error: "Failed to create company" };
@@ -255,46 +294,9 @@ export async function getCompaniesAction(filters?: {
   }
 }
 
-// Get a single company by ID
-// export async function getCompanyByIdAction(id: string) {
-//   try {
-//     await connect();
-//     const company = await Company.findById(id);
-
-//     if (!company) {
-//       return { success: false, error: "Company not found" };
-//     }
-
-//     const companyData = JSON.parse(JSON.stringify(company));
-
-//     return { success: true, company: companyData };
-//   } catch (error: any) {
-//     console.error("Error fetching company:", error);
-//     return { success: false, error: "Failed to fetch company" };
-//   }
-// }
-// export async function getCompanyByIdAction(id: string) {
-//   try {
-//     // Validate and convert the id to ObjectId
-//     if (!mongoose.Types.ObjectId.isValid(id)) {
-//       throw new Error("Invalid company ID");
-//     }
-
-//     const company = await Company.findById(id);
-
-//     if (!company) {
-//       throw new Error("Company not found");
-//     }
-
-//     return company;
-//   } catch (error) {
-//     console.error("Error fetching company:", error);
-//     throw error;
-//   }
-// }
-
 import mongoose from "mongoose";
 import { stringify } from "querystring";
+import OnboardingProgress from "@/models/onboarding";
 // Removed duplicate import of Company
 
 export async function getCompanyByIdAction(id: string) {

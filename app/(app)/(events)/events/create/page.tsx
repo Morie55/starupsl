@@ -6,6 +6,7 @@ import { CalendarIcon, Clock, MapPin, Users } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -40,7 +41,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { createEvent } from "@/app/actions/event-actions";
 
 const formSchema = z.object({
   title: z.string().min(3, {
@@ -62,11 +63,13 @@ const formSchema = z.object({
   attendees: z.coerce.number().min(1, {
     message: "At least 1 attendee is required.",
   }),
+  organizer: z.string().optional(),
 });
 
 export default function CreateEventPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverErrors, setServerErrors] = useState<any>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -77,31 +80,47 @@ export default function CreateEventPage() {
       time: "",
       location: "",
       attendees: 10,
+      organizer: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
+    setServerErrors(null);
 
     try {
-      // Here you would typically send the data to your API
-      console.log(values);
+      // Convert form data to FormData for server action
+      const formData = new FormData();
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Add all form values to FormData
+      Object.entries(values).forEach(([key, value]) => {
+        if (value instanceof Date) {
+          formData.append(key, value.toISOString().split("T")[0]);
+        } else if (value !== undefined && value !== null) {
+          formData.append(key, value.toString());
+        }
+      });
 
-      // Redirect to events page after successful submission
-      router.push("/events");
-      router.refresh();
+      // Add a default image
+      formData.append("image", "/placeholder.svg?height=400&width=800");
+
+      // Call the server action
+      const result = await createEvent(formData);
+
+      if (result && !result.success) {
+        setServerErrors(result.errors);
+        setIsSubmitting(false);
+      }
+
+      // The server action handles redirection on success
     } catch (error) {
       console.error("Error creating event:", error);
-    } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <div className="p-6">
+    <div className="container mx-auto py-8 px-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Create New Event</CardTitle>
@@ -110,6 +129,19 @@ export default function CreateEventPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {serverErrors && (
+            <div className="bg-destructive/10 text-destructive p-3 rounded-md mb-6">
+              <p className="font-semibold">
+                There was a problem with your submission:
+              </p>
+              <ul className="list-disc list-inside">
+                {serverErrors.map((error: any, index: number) => (
+                  <li key={index}>{error.message}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -233,6 +265,7 @@ export default function CreateEventPage() {
                             selected={field.value}
                             onSelect={field.onChange}
                             initialFocus
+                            disabled={(date) => date < new Date()}
                           />
                         </PopoverContent>
                       </Popover>
@@ -240,6 +273,13 @@ export default function CreateEventPage() {
                         The date when your event will take place.
                       </FormDescription>
                       <FormMessage />
+                      {field.value && (
+                        <input
+                          type="hidden"
+                          name="date"
+                          value={format(field.value, "yyyy-MM-dd")}
+                        />
+                      )}
                     </FormItem>
                   )}
                 />
@@ -282,6 +322,23 @@ export default function CreateEventPage() {
                     </FormControl>
                     <FormDescription>
                       The address or virtual link for your event.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="organizer"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Organizer</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your Organization Name" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      The name of the person or organization hosting this event.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

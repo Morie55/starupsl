@@ -14,19 +14,19 @@ export function Providers({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Check if user exists and onboarding is not completed
-    if (user && !user.publicMetadata?.onboardingCompleted) {
+    if (user && !user?.publicMetadata?.onboardingCompleted) {
       // Only redirect if not already on the onboarding page
 
       if (pathname !== "/onboarding") {
         router.push("/onboarding");
       }
     }
-    if (user && user.publicMetadata?.onboardingCompleted) {
+    if (user && user?.publicMetadata?.onboardingCompleted) {
       if (pathname === "/onboarding") {
-        router.push("/");
+        router.push(`/companies/${user?.publicMetadata?.companyId}`);
       }
     }
-  }, [user, router, pathname]);
+  }, [pathname, user]);
 
   return (
     <RoundsProvider>
