@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NotificationBell } from "@/components/notification-bell";
 
 const navigation = [
   { name: "Home", href: "/", icon: Home },
@@ -97,10 +98,7 @@ export default function RootLayout({
           {user ? (
             <div className="ml-auto flex items-center gap-4 justify-between">
               <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                  3
-                </span>
+                <NotificationBell />
                 <span className="sr-only">Notifications</span>
               </Button>
               {/* <ModeToggle /> */}
