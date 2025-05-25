@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { HelpCircle, Info, Send } from "lucide-react";
+import { HelpCircle, Info, Router, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +47,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@clerk/nextjs";
 import { getInvestorByIdAction } from "@/app/actions/investor-actions";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createInterest } from "@/app/actions/investor-interest-action";
 
 const investmentGoals = [
   { id: "growth", label: "Growth & Expansion" },
@@ -107,17 +109,18 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function InvestorInterestForm({ company }: { company: any }) {
+export default function InvestorInterestForm({ investor, round }: any) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [investorData, setInvestorData] = useState({});
-  const { user } = useUser();
+  const router = useRouter();
+  // const [investorData, setInvestorData] = useState({});
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: user?.firstName ?? "hhhhhhh",
-      email: user?.emailAddresses[0]?.emailAddress ?? "",
-      phone: "",
-      company: "",
+      fullName: investor?.name || "",
+      email: investor?.email || "",
+      phone: investor?.phone || "",
+      company: investor?.name || "",
       investorType: "",
       investmentExperience: "none",
       investmentRange: "",
@@ -134,30 +137,23 @@ export default function InvestorInterestForm({ company }: { company: any }) {
 
   const watchHasPreviousInvestments = form.watch("hasPreviousInvestments");
 
-  const getinverstordata = async () => {
-    const id: any = user?.publicMetadata?.companyId!;
-    const investorres = await getInvestorByIdAction("680972ac91dc66b00e146649");
-
-    const invet = investorres.investor;
-    form.setValue("fullName", invet?.name || "");
-    form.setValue("email", invet?.email || "");
-    form.setValue("phone", invet?.phone || "");
-    setInvestorData(invet);
-  };
-
-  useEffect(() => {
-    getinverstordata();
-  }, [user]);
-
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
 
     try {
-      const interestres = await createinterest(values);
+      const data = {
+        ...values,
+        companyId: round.companyId,
+        userId: investor.userId,
+        investorId: investor._id,
+        roundId: round._id,
+      };
+      const interestres = await createInterest(data);
       if (interestres.success) {
-        alert("There was an error submitting your interest. Please try again.");
+        alert("Successfully .");
+        router.push(`/investor-interest/interest/${interestres.interestId}`);
+        form.reset();
       }
-      form.reset();
     } catch (error) {
       console.error("Error submitting form:", error);
       alert("There was an error submitting your interest. Please try again.");
@@ -172,7 +168,7 @@ export default function InvestorInterestForm({ company }: { company: any }) {
         <CardTitle className="text-2xl">Express Investment Interest</CardTitle>
         <CardDescription>
           Complete this form to express your interest in investing in{" "}
-          {company?.name || "this company"}
+          {investor?.name || "this company"}
         </CardDescription>
       </CardHeader>
 
@@ -181,8 +177,8 @@ export default function InvestorInterestForm({ company }: { company: any }) {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {/* Personal Information Section */}
             <div>
-              <h3 className="text-lg font-medium mb-4">Personal Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <h3 className="mb-4 text-lg font-medium">Personal Information</h3>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="fullName"
@@ -255,8 +251,8 @@ export default function InvestorInterestForm({ company }: { company: any }) {
 
             {/* Investor Profile Section */}
             <div>
-              <h3 className="text-lg font-medium mb-4">Investor Profile</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <h3 className="mb-4 text-lg font-medium">Investor Profile</h3>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="investorType"
@@ -334,8 +330,8 @@ export default function InvestorInterestForm({ company }: { company: any }) {
 
             {/* Investment Details Section */}
             <div>
-              <h3 className="text-lg font-medium mb-4">Investment Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <h3 className="mb-4 text-lg font-medium">Investment Details</h3>
+              <div className="grid grid-cols-1 gap-6 mb-6 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="investmentRange"
@@ -346,7 +342,7 @@ export default function InvestorInterestForm({ company }: { company: any }) {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                              <HelpCircle className="w-4 h-4 text-muted-foreground" />
                             </TooltipTrigger>
                             <TooltipContent>
                               <p>The amount you're considering investing</p>
@@ -416,7 +412,7 @@ export default function InvestorInterestForm({ company }: { company: any }) {
                         Select all that apply to your investment strategy
                       </FormDescription>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                       {investmentGoals.map((item) => (
                         <FormField
                           key={item.id}
@@ -464,7 +460,7 @@ export default function InvestorInterestForm({ company }: { company: any }) {
 
             {/* Additional Information Section */}
             <div>
-              <h3 className="text-lg font-medium mb-4">
+              <h3 className="mb-4 text-lg font-medium">
                 Additional Information
               </h3>
 
@@ -564,7 +560,7 @@ export default function InvestorInterestForm({ company }: { company: any }) {
 
             {/* Contact Preferences */}
             <div>
-              <h3 className="text-lg font-medium mb-4">Contact Preferences</h3>
+              <h3 className="mb-4 text-lg font-medium">Contact Preferences</h3>
 
               <FormField
                 control={form.control}
@@ -617,7 +613,7 @@ export default function InvestorInterestForm({ company }: { company: any }) {
               control={form.control}
               name="termsAgreed"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <FormItem className="flex flex-row items-start p-4 space-x-3 space-y-0 border rounded-md">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -641,12 +637,12 @@ export default function InvestorInterestForm({ company }: { company: any }) {
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  <span className="w-4 h-4 border-2 border-current rounded-full animate-spin border-t-transparent" />
                   Submitting...
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <Send className="h-4 w-4" />
+                  <Send className="w-4 h-4" />
                   Submit Interest
                 </span>
               )}
@@ -655,9 +651,9 @@ export default function InvestorInterestForm({ company }: { company: any }) {
         </Form>
       </CardContent>
 
-      <CardFooter className="flex flex-col space-y-4 border-t pt-6">
+      <CardFooter className="flex flex-col pt-6 space-y-4 border-t">
         <div className="flex items-center text-sm text-muted-foreground">
-          <Info className="h-4 w-4 mr-2" />
+          <Info className="w-4 h-4 mr-2" />
           Your information will be shared only with the company. See our privacy
           policy for details.
         </div>

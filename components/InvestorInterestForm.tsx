@@ -108,7 +108,7 @@ export default function InvestorInterestForm() {
     defaultValues: {
       fullName: user?.fullName || "",
       organization: "",
-      email: user?.emailAddresses[0] || "",
+      email: user?.emailAddresses[0]?.emailAddress || "",
       phone: "",
       roundTitle: "",
       investmentCurrency: "USD",

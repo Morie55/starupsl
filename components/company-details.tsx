@@ -2922,7 +2922,9 @@ export default function CompanyDetailsPage({
                         <h3 className="text-sm font-medium text-slate-500 mb-2">
                           Interested in investing?
                         </h3>
-                        <Button className="w-full">Contact Company</Button>
+                        <Link href="/Investor-interest-form" passHref>
+                          <Button className="w-full">Contact Company</Button>
+                        </Link>
                       </div>
 
                       {company?.pitchDeck && (

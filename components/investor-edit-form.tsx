@@ -200,7 +200,7 @@ export default function InvestorEditForm({ investor }: InvestorEditFormProps) {
                   )}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="type"
@@ -264,7 +264,7 @@ export default function InvestorEditForm({ investor }: InvestorEditFormProps) {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="foundedAt"
@@ -305,7 +305,7 @@ export default function InvestorEditForm({ investor }: InvestorEditFormProps) {
                       <FormLabel>Logo URL</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="https://example.com/logo.png"
+                          placeholder="https://example.com/ilogo.png"
                           {...field}
                         />
                       </FormControl>
@@ -351,7 +351,7 @@ export default function InvestorEditForm({ investor }: InvestorEditFormProps) {
                           onClick={() => handleRemoveSector(sector)}
                           className="text-muted-foreground hover:text-foreground"
                         >
-                          <X className="h-3 w-3" />
+                          <X className="w-3 h-3" />
                           <span className="sr-only">Remove {sector}</span>
                         </button>
                       </Badge>
@@ -371,7 +371,7 @@ export default function InvestorEditForm({ investor }: InvestorEditFormProps) {
                       onClick={handleAddSector}
                       disabled={!newSector}
                     >
-                      <Plus className="h-4 w-4 mr-1" />
+                      <Plus className="w-4 h-4 mr-1" />
                       Add
                     </Button>
                   </div>
@@ -384,7 +384,7 @@ export default function InvestorEditForm({ investor }: InvestorEditFormProps) {
           <TabsContent value="contact">
             <Card>
               <CardContent className="pt-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="email"
@@ -450,10 +450,10 @@ export default function InvestorEditForm({ investor }: InvestorEditFormProps) {
                 <div className="space-y-2">
                   <FormLabel>Social Links</FormLabel>
                   {socialLinks.length > 0 && (
-                    <div className="space-y-2 mb-2">
+                    <div className="mb-2 space-y-2">
                       {socialLinks.map((social, index) => (
                         <div key={index} className="flex items-center gap-2">
-                          <div className="grid grid-cols-2 gap-2 flex-1">
+                          <div className="grid flex-1 grid-cols-2 gap-2">
                             <Input
                               value={social.name}
                               disabled
@@ -471,7 +471,7 @@ export default function InvestorEditForm({ investor }: InvestorEditFormProps) {
                             size="icon"
                             onClick={() => handleRemoveSocialLink(index)}
                           >
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <Trash2 className="w-4 h-4 text-destructive" />
                             <span className="sr-only">Remove social link</span>
                           </Button>
                         </div>
@@ -499,7 +499,7 @@ export default function InvestorEditForm({ investor }: InvestorEditFormProps) {
                     disabled={!newSocialName || !newSocialLink}
                     className="mt-2"
                   >
-                    <Plus className="h-4 w-4 mr-1" />
+                    <Plus className="w-4 h-4 mr-1" />
                     Add Social Link
                   </Button>
                 </div>
@@ -553,7 +553,7 @@ export default function InvestorEditForm({ investor }: InvestorEditFormProps) {
                   )}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="fundingCapacity"
@@ -659,12 +659,12 @@ export default function InvestorEditForm({ investor }: InvestorEditFormProps) {
           </TabsContent>
         </Tabs>
 
-        <CardFooter className="flex justify-between mt-6 px-0">
+        <CardFooter className="flex justify-between px-0 mt-6">
           <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Save Changes
           </Button>
         </CardFooter>

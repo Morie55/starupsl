@@ -1,7 +1,7 @@
 import { getInvestorByIdAction } from "@/app/actions/investor-actions";
 import InvestorDetails from "@/components/investor-details";
 
-export default async function CompanyDetailsPage({
+export default async function InvestorDetailsPage({
   params,
 }: {
   params: Promise<{ id: string }>;

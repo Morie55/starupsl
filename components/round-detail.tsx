@@ -46,6 +46,8 @@ import { toast } from "@/components/ui/use-toast";
 import { useRounds } from "@/contexts/rounds-context";
 import { RoundFormData } from "@/types/types";
 import { deleteRound } from "@/app/actions/round-actions";
+import InvestmentInterestsTable from "./investment-interests-table";
+import { useUser } from "@clerk/nextjs";
 
 // Helper function to get status badge color
 const getStatusColor = (status: string) => {
@@ -63,7 +65,14 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export default function RoundDetail({ round }: { round: RoundFormData }) {
+export default function RoundDetail({
+  round,
+  interests,
+}: {
+  round: RoundFormData;
+  interests: any;
+}) {
+  const { user } = useUser();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   async function handleDelete() {
@@ -86,7 +95,7 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
 
   if (!round) {
     return (
-      <div className=" py-8">
+      <div className="py-8 ">
         <Card>
           <CardContent className="pt-6">
             <p>
@@ -107,7 +116,7 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
   return (
     <div className="p-4 py-8">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 mb-6 md:flex-row md:items-center">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold">{round.roundTitle}</h1>
@@ -116,32 +125,35 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
             </Badge>
           </div>
 
-          <p className="text-muted-foreground mt-1"> {round.companyName}</p>
+          <p className="mt-1 text-muted-foreground"> {round.companyName}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" asChild>
             <Link href="/rounds">Back to Rounds</Link>
           </Button>
-          {/* {round.userId === user?.id || user?.publicMetadata?.isAdmin  ?"":""} */}
-          <Button variant="outline" size="icon" asChild>
-            <Link href={`/round/${round?._id}/edit`}>
-              <Edit className="h-4 w-4" />
-            </Link>
-          </Button>
+
+          {round.userId! === user?.id ||
+            (user?.publicMetadata?.isAdmin! && (
+              <Button variant="outline" size="icon" asChild>
+                <Link href={`/round/${round?._id}/edit`}>
+                  <Edit className="w-4 h-4" />
+                </Link>
+              </Button>
+            ))}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon">
-                <Share2 className="h-4 w-4" />
+                <Share2 className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem>
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="w-4 h-4 mr-2" />
                 Export as PDF
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Users className="mr-2 h-4 w-4" />
+                <Users className="w-4 h-4 mr-2" />
                 Share with Investors
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -149,38 +161,44 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <AlertDialog
-            open={showDeleteDialog}
-            onOpenChange={setShowDeleteDialog}
-          >
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="icon" className="text-red-500">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete this funding round and all
-                  associated data. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDelete}
-                  className="bg-red-500 hover:bg-red-600"
-                >
-                  Delete Round
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {round.userId! === user?.id ||
+            (user?.publicMetadata?.isAdmin! && (
+              <AlertDialog
+                open={showDeleteDialog}
+                onOpenChange={setShowDeleteDialog}
+              >
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="text-red-500"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete this funding round and all
+                      associated data. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      className="bg-red-500 hover:bg-red-600"
+                    >
+                      Delete Round
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ))}
         </div>
       </div>
 
-      {/* Funding Progress Card */}
       <Card className="mb-8">
         <CardHeader className="pb-3">
           <CardTitle>Funding Progress</CardTitle>
@@ -194,7 +212,7 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>{progressPercentage}% Complete</span>
               <span>
-                <CalendarIcon className="inline-block h-4 w-4 mr-1" />
+                <CalendarIcon className="inline-block w-4 h-4 mr-1" />
                 {format(new Date(round.closingDate), "PPP")}
               </span>
             </div>
@@ -203,15 +221,15 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
       </Card>
 
       {/* Main Details */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         {/* Left Column - Key Details */}
-        <div className="md:col-span-2 space-y-8">
+        <div className="space-y-8 md:col-span-2">
           <Card>
             <CardHeader>
               <CardTitle>Round Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Round Type
@@ -265,7 +283,7 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
               <Separator />
 
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                <h3 className="mb-2 text-sm font-medium text-muted-foreground">
                   Use of Funds
                 </h3>
                 <p className="text-sm">{round.useOfFunds}</p>
@@ -273,57 +291,15 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
 
               {round.supportingDocuments && (
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                  <h3 className="mb-2 text-sm font-medium text-muted-foreground">
                     Supporting Documents
                   </h3>
                   <Button variant="outline" size="sm" className="gap-2">
-                    <Download className="h-4 w-4" />
+                    <Download className="w-4 h-4" />
                     Download Pitch Deck
                   </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          {/* Investors List */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Investors</CardTitle>
-              <CardDescription>
-                {round.investors?.length || 0} investors have committed to this
-                round
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {round.investors && round.investors.length > 0 ? (
-                  round.investors.map((investor: any) => (
-                    <div
-                      key={investor.id}
-                      className="flex justify-between items-center p-3 bg-muted/50 rounded-md"
-                    >
-                      <div>
-                        <h4 className="font-medium">{investor.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Committed on {investor.date}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{investor.amount}</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground text-center py-4">
-                    No investors have committed to this round yet.
-                  </p>
-                )}
-                {round.investors && round.investors.length > 0 && (
-                  <Button variant="outline" className="w-full">
-                    View All Investors
-                  </Button>
-                )}
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -335,7 +311,7 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
               <CardTitle>Round Timeline</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="relative pl-6 border-l space-y-6">
+              <div className="relative pl-6 space-y-6 border-l">
                 <div className="relative">
                   <div className="absolute -left-[25px] h-4 w-4 rounded-full bg-green-500"></div>
                   <h4 className="font-medium">Round Created</h4>
@@ -361,26 +337,34 @@ export default function RoundDetail({ round }: { round: RoundFormData }) {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button className="w-full">
-                <Link href={`/investor-interest?roundId=${round._id}`}>
-                  Show Interest
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full">
+          {user?.publicMetadata?.role === "investor" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button className="w-full">
+                  <Link href={`/investor-interest/${round._id}`}>
+                    Show Interest
+                  </Link>
+                </Button>
+                {/* <Button variant="outline" className="w-full">
                 Generate Term Sheet
               </Button>
               <Button variant="outline" className="w-full">
                 Schedule Investor Call
-              </Button>
-            </CardContent>
-          </Card>
+              </Button> */}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
+
+      {round.userId === user?.id && (
+        <div>
+          <InvestmentInterestsTable interests={interests} />
+        </div>
+      )}
     </div>
   );
 }

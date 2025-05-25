@@ -5,8 +5,6 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-// import { currentUser } from "@clerk/nextjs/server";
-// import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "StartUp SL Project",
@@ -36,7 +34,7 @@ export default async function RootLayout({
             attribute="class"
             defaultTheme="system"
             enableSystem
-            disableTransitionOnChange
+            // disableTransitionOnChange
           >
             <Providers>{children}</Providers>
           </ThemeProvider>

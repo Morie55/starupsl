@@ -1,101 +1,20 @@
 "use server";
 
-import { z } from "zod";
+import { connect } from "@/lib/mongoDB";
+import Company from "@/models/Company";
+import Investor from "@/models/Investor";
+import InvestorInterest from "@/models/InvestorInterest";
+import Round from "@/models/Round";
 
-// Form schema for validation
-const formSchema = z.object({
-  fullName: z.string().min(2, { message: "Full name is required" }),
-  organization: z.string().optional(),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  phone: z.string().optional(),
-  investorType: z.enum([
-    "Individual",
-    "Angel",
-    "VC Firm",
-    "Corporate",
-    "Other",
-  ]),
-  roundTitle: z.string().min(1, { message: "Round title is required" }),
-  startupId: z.string(),
-  investmentCurrency: z.string().default("USD"),
-  investmentAmount: z.coerce
-    .number()
-    .min(100, { message: "Minimum investment amount must be at least 100" }),
-  investmentType: z.enum([
-    "Equity",
-    "Convertible Note",
-    "Debt",
-    "SAFE",
-    "Other",
-  ]),
-  investmentRationale: z.string().optional(),
-  engagementPreferences: z.object({
-    wantUpdates: z.boolean().default(false),
-    strategicPartnership: z.boolean().default(false),
-    advisoryRole: z.boolean().default(false),
-    meetTeam: z.boolean().default(false),
-  }),
-  previousExperience: z.string().optional(),
-  preferredContactMethod: z.enum([
-    "Email",
-    "Phone Call",
-    "Video Call",
-    "In-Person Meeting",
-  ]),
-  additionalQuestions: z.string().optional(),
-  commitmentConfirmed: z.boolean(),
-});
-
-export async function submitInvestorInterest(formData: FormData) {
-  // Extract and validate form data
-  const validatedFields = formSchema.safeParse({
-    fullName: formData.get("fullName"),
-    organization: formData.get("organization"),
-    email: formData.get("email"),
-    phone: formData.get("phone"),
-    investorType: formData.get("investorType"),
-    roundTitle: formData.get("roundTitle"),
-    startupId: formData.get("startupId"),
-    investmentCurrency: formData.get("investmentCurrency"),
-    investmentAmount: formData.get("investmentAmount"),
-    investmentType: formData.get("investmentType"),
-    investmentRationale: formData.get("investmentRationale"),
-    engagementPreferences: {
-      wantUpdates: formData.get("engagementPreferences.wantUpdates") === "on",
-      strategicPartnership:
-        formData.get("engagementPreferences.strategicPartnership") === "on",
-      advisoryRole: formData.get("engagementPreferences.advisoryRole") === "on",
-      meetTeam: formData.get("engagementPreferences.meetTeam") === "on",
-    },
-    previousExperience: formData.get("previousExperience"),
-    preferredContactMethod: formData.get("preferredContactMethod"),
-    additionalQuestions: formData.get("additionalQuestions"),
-    commitmentConfirmed: formData.get("commitmentConfirmed") === "on",
-  });
-
-  // Return early if validation fails
-  if (!validatedFields.success) {
-    return {
-      error: "Invalid form data",
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
-  }
-
-  // Process the validated data
-  const data = validatedFields.data;
-
+export async function createInterest(formData: any) {
   try {
-    // Here you would typically save to your database using Mongoose
-    // For example:
-    await InvestorInterest.create({
-      ...data,
-      investorId: "user-id-from-auth", // You'd get this from your auth system
-    });
+    await connect();
+    const newInterest = new InvestorInterest(formData);
 
-    // For now, we'll just simulate a successful submission
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    return { success: true };
+    const saveNewInterest = await newInterest.save();
+    return JSON.parse(
+      JSON.stringify({ success: true, interestId: saveNewInterest._id })
+    );
   } catch (error) {
     console.error("Error submitting investor interest:", error);
     return {
@@ -104,3 +23,80 @@ export async function submitInvestorInterest(formData: FormData) {
     };
   }
 }
+
+export async function getInterestDetails(id: string) {
+  try {
+    await connect();
+
+    const interest = await InvestorInterest.findById(id);
+    const round = await Round.findById(interest.roundId);
+    const company = await Company.findById(interest.companyId);
+    const investor = await Investor.findById(interest.investorId);
+    const interestDoc = JSON.parse(JSON.stringify(interest));
+    const roundDoc = JSON.parse(JSON.stringify(interest));
+    const companyDoc = JSON.parse(JSON.stringify(company));
+    const investorDoc = JSON.parse(JSON.stringify(investor));
+    const interestData = {
+      ...interestDoc,
+      round: {
+        name: round?.roundTitle,
+        id: round?._id,
+      },
+      companyData: {
+        name: companyDoc?.name,
+        logo: companyDoc?.logo,
+        id: companyDoc?._id,
+      },
+      investor: {
+        name: investorDoc?.name,
+        logo: investorDoc?.logo,
+        id: investorDoc?._id,
+      },
+    };
+
+    const interestJson = JSON.parse(JSON.stringify(interestData));
+
+    return { success: true, interest: interestJson };
+  } catch (error) {
+    console.error("Error Fetching investor interest:", error);
+    return {
+      error: "Failed to Fetching investor interest",
+      details: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+export async function updateInterestData(id: string, data: any) {
+  try {
+    await connect();
+
+    const interest = await InvestorInterest.findById(id);
+
+    interest.status = data.status;
+    interest.responseMessage = data.responseMessage;
+    interest.termSheet = data.termSheet;
+
+    const saveData = await interest.save();
+
+    return JSON.parse(JSON.stringify({ success: true, interest: saveData }));
+  } catch (error) {
+    console.error("Error Fetching investor interest:", error);
+    return {
+      error: "Failed to Fetching investor interest",
+      details: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+export async function getInterestsByRoundId(roundId: string) {
+  try {
+    await connect();
+
+    const interests = await InvestorInterest.find({ roundId: roundId });
+
+    return JSON.parse(JSON.stringify({ success: true, interests: interests }));
+  } catch (error) {
+    console.log("error:", error);
+  }
+}
+
+export async function getInterestsByUserId(id: string) {}

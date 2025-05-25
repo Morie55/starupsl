@@ -1,3 +1,4 @@
+import { getInterestsByRoundId } from "@/app/actions/investor-interest-action";
 import { getRoundById } from "@/app/actions/round-actions";
 import RoundDetail from "@/components/round-detail";
 
@@ -12,6 +13,7 @@ export default async function RoundDetailPage({
   }
 
   const round = await getRoundById(id);
+  const interests = await getInterestsByRoundId(round._id);
 
-  return <RoundDetail round={round!} />;
+  return <RoundDetail round={round!} interests={interests.interests} />;
 }

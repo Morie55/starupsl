@@ -86,7 +86,7 @@ export default function RoundsTable({ rounds, loading }: any) {
     from: undefined,
     to: undefined,
   });
-  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const pathname = usePathname();
   const { user } = useUser();
   // Filter rounds based on search query and filters
@@ -161,13 +161,13 @@ export default function RoundsTable({ rounds, loading }: any) {
         {/* Filters */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-md font-medium flex items-center">
-              <Filter className="h-4 w-4 mr-2" />
+            <CardTitle className="flex items-center font-medium text-md">
+              <Filter className="w-4 h-4 mr-2" />
               Filters
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -177,24 +177,6 @@ export default function RoundsTable({ rounds, loading }: any) {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-
-              {/* <Select
-                value={statusFilter || ""}
-                onValueChange={(value) =>
-                  setStatusFilter(value === "" ? null : value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Status: All" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
-                  <SelectItem value="Draft">Draft</SelectItem>
-                  <SelectItem value="Under Review">Under Review</SelectItem>
-                  <SelectItem value="Open">Open</SelectItem>
-                  <SelectItem value="Closed">Closed</SelectItem>
-                </SelectContent>
-              </Select> */}
 
               <Select
                 value={statusFilter || "all"}
@@ -213,27 +195,6 @@ export default function RoundsTable({ rounds, loading }: any) {
                   <SelectItem value="Closed">Closed</SelectItem>
                 </SelectContent>
               </Select>
-
-              {/* <Select
-                value={typeFilter || ""}
-                onValueChange={(value) =>
-                  setTypeFilter(value === "" ? null : value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Type: All" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
-                  <SelectItem value="Pre-Seed">Pre-Seed</SelectItem>
-                  <SelectItem value="Seed">Seed</SelectItem>
-                  <SelectItem value="Series A">Series A</SelectItem>
-                  <SelectItem value="Series B">Series B</SelectItem>
-                  <SelectItem value="Bridge / Convertible">
-                    Bridge / Convertible
-                  </SelectItem>
-                </SelectContent>
-              </Select> */}
 
               <Select
                 value={typeFilter || "all"}
@@ -260,9 +221,9 @@ export default function RoundsTable({ rounds, loading }: any) {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="justify-start text-left font-normal"
+                    className="justify-start font-normal text-left"
                   >
-                    <SlidersHorizontal className="mr-2 h-4 w-4" />
+                    <SlidersHorizontal className="w-4 h-4 mr-2" />
                     {dateRange.from || dateRange.to ? (
                       <>
                         {dateRange.from
@@ -322,7 +283,7 @@ export default function RoundsTable({ rounds, loading }: any) {
                       onClick={() => setStatusFilter(null)}
                       className="ml-1 rounded-full hover:bg-muted p-0.5"
                     >
-                      <ChevronDown className="h-3 w-3" />
+                      <ChevronDown className="w-3 h-3" />
                     </Button>
                   </Badge>
                 )}
@@ -333,7 +294,7 @@ export default function RoundsTable({ rounds, loading }: any) {
                       onClick={() => setTypeFilter(null)}
                       className="ml-1 rounded-full hover:bg-muted p-0.5"
                     >
-                      <ChevronDown className="h-3 w-3" />
+                      <ChevronDown className="w-3 h-3" />
                     </Button>
                   </Badge>
                 )}
@@ -351,7 +312,7 @@ export default function RoundsTable({ rounds, loading }: any) {
                       }
                       className="ml-1 rounded-full hover:bg-muted p-0.5"
                     >
-                      <ChevronDown className="h-3 w-3" />
+                      <ChevronDown className="w-3 h-3" />
                     </Button>
                   </Badge>
                 )}
@@ -359,7 +320,7 @@ export default function RoundsTable({ rounds, loading }: any) {
                   variant="ghost"
                   size="sm"
                   onClick={resetFilters}
-                  className="text-sm h-7 px-2"
+                  className="px-2 text-sm h-7"
                 >
                   Clear all
                 </Button>
@@ -371,7 +332,7 @@ export default function RoundsTable({ rounds, loading }: any) {
         {/* Table */}
         <Card>
           <CardContent className="p-0">
-            <div className="rounded-md border">
+            <div className="border rounded-md">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -429,12 +390,12 @@ export default function RoundsTable({ rounds, loading }: any) {
                             href={`/companies/${round.companyId}`}
                             className="flex items-center gap-2 mt-1"
                           >
-                            <Avatar className="h-6 w-6 rounded-sm">
+                            <Avatar className="w-6 h-6 rounded-sm">
                               <AvatarFallback className="text-xs">
                                 {getInitials(round.companyName)}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm text-blue-500 hover:underline hover:text-primary transition-all duration-150">
+                            <span className="text-sm text-blue-500 transition-all duration-150 hover:underline hover:text-primary">
                               {round.companyName}
                             </span>
                           </Link>
@@ -469,10 +430,10 @@ export default function RoundsTable({ rounds, loading }: any) {
                             {/* {round.investors?.length || 0} */}
                             {}
                             <div className="flex items-center justify-center mt-1 -space-x-3">
-                              <div className="w-6 h-6 rounded-full bg-gray-500 flex items-center justify-center text-sm font-medium text-gray-700"></div>
-                              <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-sm font-medium text-gray-700"></div>
-                              <div className="w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center text-sm font-medium text-gray-700"></div>
-                              <div className="w-6 h-6 rounded-full border bg-card flex items-center justify-center text-sm font-medium text-gray-700">
+                              <div className="flex items-center justify-center w-6 h-6 text-sm font-medium text-gray-700 bg-gray-500 rounded-full"></div>
+                              <div className="flex items-center justify-center w-6 h-6 text-sm font-medium text-gray-700 bg-blue-500 rounded-full"></div>
+                              <div className="flex items-center justify-center w-6 h-6 text-sm font-medium text-gray-700 bg-yellow-500 rounded-full"></div>
+                              <div className="flex items-center justify-center w-6 h-6 text-sm font-medium text-gray-700 border rounded-full bg-card">
                                 +6
                                 {/* +{round.investors?.length - 3} */}
                               </div>
@@ -490,8 +451,8 @@ export default function RoundsTable({ rounds, loading }: any) {
                         </TableCell>
 
                         {(user?.publicMetadata.role !== "company" ||
-                          user?.id === round.companyId ||
-                          user?.publicMetadata.role === "admin") && (
+                          user?.id === round.userId ||
+                          user?.publicMetadata.role! === "admin") && (
                           <TableCell>
                             <Link href={`/round/${round._id}`}>
                               <Button>View details</Button>
@@ -571,7 +532,7 @@ export default function RoundsTable({ rounds, loading }: any) {
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="w-4 h-4" />
             </Button>
             <div className="flex items-center gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(
@@ -580,7 +541,7 @@ export default function RoundsTable({ rounds, loading }: any) {
                     key={pageNum}
                     variant={pageNum === page ? "default" : "outline"}
                     size="icon"
-                    className="h-8 w-8"
+                    className="w-8 h-8"
                     onClick={() => setPage(pageNum)}
                   >
                     {pageNum}
@@ -594,7 +555,7 @@ export default function RoundsTable({ rounds, loading }: any) {
               onClick={() => setPage(Math.min(totalPages, page + 1))}
               disabled={page === totalPages}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         </div>

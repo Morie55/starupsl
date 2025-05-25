@@ -23,7 +23,11 @@ export function Providers({ children }: { children: ReactNode }) {
     }
     if (user && user?.publicMetadata?.onboardingCompleted) {
       if (pathname === "/onboarding") {
-        router.push(`/companies/${user?.publicMetadata?.companyId}`);
+        if (user?.publicMetadata?.role === "investor") {
+          router.push(`/investors/${user?.publicMetadata?.companyId}`);
+        } else {
+          router.push(`/companies/${user?.publicMetadata?.companyId}`);
+        }
       }
     }
   }, [pathname, user]);

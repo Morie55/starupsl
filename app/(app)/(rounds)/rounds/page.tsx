@@ -13,7 +13,7 @@ export default async function RoundsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="p-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 p-10 md:flex-row md:items-center">
         <div>
           <h1 className="text-2xl font-bold">Funding Rounds</h1>
           <p className="text-muted-foreground">
