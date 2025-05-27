@@ -59,7 +59,7 @@ interface InvestorEditFormProps {
   investor: Investor;
 }
 
-export default function InvestorEditForm({ investor }: InvestorEditFormProps) {
+export default function InvestorEditForm({ investor }: any) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sectors, setSectors] = useState<string[]>(
@@ -161,9 +161,9 @@ export default function InvestorEditForm({ investor }: InvestorEditFormProps) {
         socialLinks: socialLinks,
       };
 
-      await updateInvestorAction(investor.id, updatedInvestor);
+      await updateInvestorAction(investor._id, updatedInvestor);
 
-      router.push(`/investors/${investor.id}`);
+      router.push(`/investors/${investor._id}`);
       router.refresh();
     } catch (error) {
       console.error("Error updating investor:", error);

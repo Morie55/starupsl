@@ -90,16 +90,6 @@ export default function OtherPlatforms() {
       status: "Active",
       features: ["Job Listings", "Talent Pool", "Career Resources"],
     },
-    // {
-    //   id: 7,
-    //   name: "SL Academy",
-    //   description: "Professional development and training academy",
-    //   url: "https://academy.innovationsalone.com",
-    //   category: "Education",
-    //   icon: <GraduationCap className="w-6 h-6" />,
-    //   status: "Coming Soon",
-    //   features: ["Professional Training", "Certifications", "Mentorship"],
-    // },
     {
       id: 8,
       name: "Inno Digital",
@@ -123,15 +113,7 @@ export default function OtherPlatforms() {
     },
   ];
 
-  const categories = [
-    "All",
-    "Innovation",
-    "Community",
-    "Education",
-    "Events",
-    "Jobs",
-    "News",
-  ];
+  const categories = ["Other platforms"];
 
   return (
     <div className="min-h-scree">

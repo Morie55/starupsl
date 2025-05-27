@@ -229,6 +229,10 @@ const companyFormSchema = z.object({
   joinEcosystemPrograms: z.enum(["Yes", "No"]),
   consentToDataUsage: z.enum(["Yes", "No"]),
   additionalComments: z.string().optional(),
+
+  // Registration verification fields
+  isRegistered: z.enum(["Yes", "No"]),
+  registrationNumberInput: z.string().optional(),
 });
 
 // Entity type selection schema
@@ -285,6 +289,8 @@ const turnoverRanges = [
   "$500,000 - $1 million",
   "$1 million - $5 million",
   "More than $5 million",
+  "Prefer not to say",
+  "Not applicable",
 ];
 
 export default function OnboardingPage() {
@@ -298,7 +304,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0); // 0 = entity selection, 1+ = form steps
   const [socialLinks, setSocialLinks] = useState([{ name: "", link: "" }]);
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
-  const [totalSteps] = useState(11); // Increased to 11 steps for company form
+  const [totalSteps] = useState(12); // Increased to 12 steps for company form
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
@@ -369,6 +375,8 @@ export default function OnboardingPage() {
       joinEcosystemPrograms: "No",
       consentToDataUsage: "No",
       additionalComments: "",
+      isRegistered: "No",
+      registrationNumberInput: "",
     },
   });
 
@@ -408,25 +416,6 @@ export default function OnboardingPage() {
   const digitalToolsValues = companyForm.watch("digitalTools");
 
   // Calculate form progress
-  // Remove the existing useEffect for form progress calculation that looks like this:
-  // useEffect(() => {
-  //   if (entityType === "company") {
-  //     const formValues = companyForm.getValues()
-  //     const totalFields = Object.keys(formValues).length
-  //     let filledFields = 0
-
-  //     Object.entries(formValues).forEach(([key, value]) => {
-  //       if (value !== undefined && value !== "" && value !== null && !(Array.isArray(value) && value.length === 0)) {
-  //         filledFields++
-  //       }
-  //     })
-
-  //     const progress = Math.round((filledFields / totalFields) * 100)
-  //     setFormProgress(progress)
-  //   }
-  // }, [companyForm.watch(), entityType])
-
-  // And replace it with this simpler calculation that's based on the current step:
   useEffect(() => {
     if (entityType === "company") {
       // Calculate progress based on current step (step 0 is entity selection)
@@ -448,6 +437,25 @@ export default function OnboardingPage() {
     // Validate current step fields before proceeding
     if (entityType === "company") {
       if (step === 1) {
+        const isRegistered = companyForm.getValues("isRegistered");
+        if (isRegistered === "No") {
+          // Don't allow progression if not registered
+          return;
+        }
+        companyForm
+          .trigger(["isRegistered", "registrationNumberInput"])
+          .then((isValid) => {
+            if (isValid) {
+              // Copy registration number to the main field
+              const regNumber = companyForm.getValues(
+                "registrationNumberInput"
+              );
+              companyForm.setValue("registrationNumber", regNumber);
+              setStep(step + 1);
+              saveProgress();
+            }
+          });
+      } else if (step === 2) {
         companyForm
           .trigger(["name", "sector", "otherSector", "type", "stage"])
           .then((isValid) => {
@@ -456,7 +464,7 @@ export default function OnboardingPage() {
               saveProgress();
             }
           });
-      } else if (step === 2) {
+      } else if (step === 3) {
         companyForm
           .trigger(["email", "phone", "address", "website"])
           .then((isValid) => {
@@ -465,7 +473,7 @@ export default function OnboardingPage() {
               saveProgress();
             }
           });
-      } else if (step === 3) {
+      } else if (step === 4) {
         companyForm
           .trigger([
             "location",
@@ -481,7 +489,7 @@ export default function OnboardingPage() {
               saveProgress();
             }
           });
-      } else if (step === 4) {
+      } else if (step === 5) {
         companyForm
           .trigger([
             "fundingStatus",
@@ -496,7 +504,7 @@ export default function OnboardingPage() {
               saveProgress();
             }
           });
-      } else if (step === 5) {
+      } else if (step === 6) {
         companyForm
           .trigger([
             "headOfficeAddress",
@@ -511,7 +519,7 @@ export default function OnboardingPage() {
               saveProgress();
             }
           });
-      } else if (step === 6) {
+      } else if (step === 7) {
         companyForm
           .trigger([
             "founderName",
@@ -528,7 +536,7 @@ export default function OnboardingPage() {
               saveProgress();
             }
           });
-      } else if (step === 7) {
+      } else if (step === 8) {
         companyForm
           .trigger([
             "annualTurnoverBefore",
@@ -545,7 +553,7 @@ export default function OnboardingPage() {
               saveProgress();
             }
           });
-      } else if (step === 8) {
+      } else if (step === 9) {
         companyForm
           .trigger([
             "usesDigitalTools",
@@ -560,7 +568,7 @@ export default function OnboardingPage() {
               saveProgress();
             }
           });
-      } else if (step === 9) {
+      } else if (step === 10) {
         companyForm
           .trigger([
             "businessChallenges",
@@ -575,7 +583,7 @@ export default function OnboardingPage() {
               saveProgress();
             }
           });
-      } else if (step === 10) {
+      } else if (step === 11) {
         companyForm
           .trigger([
             "employsVulnerableGroups",
@@ -926,24 +934,26 @@ export default function OnboardingPage() {
   const getStepTitle = () => {
     if (entityType === "company") {
       return step === 1
-        ? "Basic Information"
+        ? "Registration Verification"
         : step === 2
-        ? "Contact Information"
+        ? "Basic Information"
         : step === 3
-        ? "Company Details"
+        ? "Contact Information"
         : step === 4
-        ? "Funding Information"
+        ? "Company Details"
         : step === 5
-        ? "General Business Information"
+        ? "Funding Information"
         : step === 6
-        ? "Ownership & Management"
+        ? "General Business Information"
         : step === 7
-        ? "Financial & Banking"
+        ? "Ownership & Management"
         : step === 8
-        ? "Innovation & Digital Tools"
+        ? "Financial & Banking"
         : step === 9
-        ? "Challenges & Growth"
+        ? "Innovation & Digital Tools"
         : step === 10
+        ? "Challenges & Growth"
+        : step === 11
         ? "Social & Environmental Impact"
         : "Consent & Follow Up";
     } else if (entityType === "investor") {
@@ -963,24 +973,26 @@ export default function OnboardingPage() {
   const getStepDescription = () => {
     if (entityType === "company") {
       return step === 1
-        ? "Let's start with the essentials about your company"
+        ? "Please confirm your company registration status"
         : step === 2
-        ? "How can people reach your company?"
+        ? "Let's start with the essentials about your company"
         : step === 3
-        ? "Tell us more about your company's background"
+        ? "How can people reach your company?"
         : step === 4
-        ? "Share details about your company's financial situation"
+        ? "Tell us more about your company's background"
         : step === 5
-        ? "Tell us about your business model and sector"
+        ? "Share details about your company's financial situation"
         : step === 6
-        ? "Information about the company's founder and compliance"
+        ? "Tell us about your business model and sector"
         : step === 7
-        ? "Details about your company's financial status and banking"
+        ? "Information about the company's founder and compliance"
         : step === 8
-        ? "Tell us about your use of technology and innovation"
+        ? "Details about your company's financial status and banking"
         : step === 9
-        ? "What challenges does your business face and how do you plan to grow?"
+        ? "Tell us about your use of technology and innovation"
         : step === 10
+        ? "What challenges does your business face and how do you plan to grow?"
+        : step === 11
         ? "Tell us about your social and environmental impact"
         : "Final steps and consent information";
     } else if (entityType === "investor") {
@@ -1090,7 +1102,7 @@ export default function OnboardingPage() {
               {/* Progress indicator */}
               <div className="justify-between hidden mt-8 md:flex">
                 {Array.from({
-                  length: entityType === "company" ? totalSteps : 4,
+                  length: entityType === "company" ? 12 : 4,
                 }).map((_, index) => (
                   <div key={index} className="flex flex-col items-center">
                     <div
@@ -1119,24 +1131,26 @@ export default function OnboardingPage() {
                     >
                       {entityType === "company"
                         ? index === 0
-                          ? "Basic Info"
+                          ? "Registration"
                           : index === 1
-                          ? "Contact"
+                          ? "Basic Info"
                           : index === 2
-                          ? "Details"
+                          ? "Contact"
                           : index === 3
-                          ? "Funding"
+                          ? "Details"
                           : index === 4
-                          ? "Business Info"
+                          ? "Funding"
                           : index === 5
-                          ? "Ownership"
+                          ? "Business Info"
                           : index === 6
-                          ? "Financial"
+                          ? "Ownership"
                           : index === 7
-                          ? "Innovation"
+                          ? "Financial"
                           : index === 8
-                          ? "Challenges"
+                          ? "Innovation"
                           : index === 9
+                          ? "Challenges"
+                          : index === 10
                           ? "Impact"
                           : "Consent"
                         : index === 0
@@ -1172,8 +1186,83 @@ export default function OnboardingPage() {
                     onSubmit={companyForm.handleSubmit(onSubmit)}
                     className="space-y-6"
                   >
-                    {/* Step 1: Basic Information */}
+                    {/* Step 1: Registration Verification */}
                     {step === 1 && (
+                      <>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="isRegistered">
+                              Are you registered?{" "}
+                              <span className="text-red-500">*</span>
+                            </Label>
+                            <RadioGroup
+                              onValueChange={(value) =>
+                                companyForm.setValue(
+                                  "isRegistered",
+                                  value as "Yes" | "No"
+                                )
+                              }
+                              defaultValue={companyForm.getValues(
+                                "isRegistered"
+                              )}
+                              className="flex space-x-4"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem
+                                  value="Yes"
+                                  id="registered-yes"
+                                />
+                                <Label htmlFor="registered-yes">Yes</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="No" id="registered-no" />
+                                <Label htmlFor="registered-no">No</Label>
+                              </div>
+                            </RadioGroup>
+                          </div>
+
+                          {companyForm.watch("isRegistered") === "No" && (
+                            <Alert className="border-red-200 bg-red-50">
+                              <Info className="w-4 h-4 text-red-600" />
+                              <AlertDescription className="text-red-800">
+                                You need to be a registered company with the
+                                following: Corporate Affairs Commission, City
+                                Council, or Local Council before proceeding with
+                                this onboarding form.
+                              </AlertDescription>
+                            </Alert>
+                          )}
+
+                          {companyForm.watch("isRegistered") === "Yes" && (
+                            <div className="space-y-2">
+                              <Label htmlFor="registrationNumberInput">
+                                Registration Number{" "}
+                                <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="registrationNumberInput"
+                                {...companyForm.register(
+                                  "registrationNumberInput"
+                                )}
+                                placeholder="Enter your registration number"
+                              />
+                              {companyForm.formState.errors
+                                .registrationNumberInput && (
+                                <p className="text-sm text-red-500">
+                                  {
+                                    companyForm.formState.errors
+                                      .registrationNumberInput.message
+                                  }
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Step 2: Basic Information */}
+                    {step === 2 && (
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
@@ -1315,8 +1404,8 @@ export default function OnboardingPage() {
                       </>
                     )}
 
-                    {/* Step 2: Contact Information */}
-                    {step === 2 && (
+                    {/* Step 3: Contact Information */}
+                    {step === 3 && (
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
@@ -1460,8 +1549,8 @@ export default function OnboardingPage() {
                       </>
                     )}
 
-                    {/* Step 3: Company Details */}
-                    {step === 3 && (
+                    {/* Step 4: Company Details */}
+                    {step === 4 && (
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
@@ -1623,8 +1712,8 @@ export default function OnboardingPage() {
                       </>
                     )}
 
-                    {/* Step 4: Funding Information */}
-                    {step === 4 && (
+                    {/* Step 5: Funding Information */}
+                    {step === 5 && (
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
@@ -1749,8 +1838,8 @@ export default function OnboardingPage() {
                       </>
                     )}
 
-                    {/* Step 5: General Business Information */}
-                    {step === 5 && (
+                    {/* Step 6: General Business Information */}
+                    {step === 6 && (
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
@@ -1897,8 +1986,8 @@ export default function OnboardingPage() {
                       </>
                     )}
 
-                    {/* Step 6: Ownership & Management */}
-                    {step === 6 && (
+                    {/* Step 7: Ownership & Management */}
+                    {step === 7 && (
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
@@ -2234,8 +2323,8 @@ export default function OnboardingPage() {
                       </>
                     )}
 
-                    {/* Step 7: Financial & Banking */}
-                    {step === 7 && (
+                    {/* Step 8: Financial & Banking */}
+                    {step === 8 && (
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
@@ -2317,7 +2406,7 @@ export default function OnboardingPage() {
 
                           <div className="space-y-2">
                             <Label htmlFor="annualTurnoverNext">
-                              Annual Turnover in the coming year (Estimate){" "}
+                              Annual turnover in the next two years (Estimate){" "}
                               <span className="text-red-500">*</span>
                             </Label>
                             <Select
@@ -2677,8 +2766,8 @@ export default function OnboardingPage() {
                       </>
                     )}
 
-                    {/* Step 8: Innovation & Digital Tools */}
-                    {step === 8 && (
+                    {/* Step 9: Innovation & Digital Tools */}
+                    {step === 9 && (
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
@@ -2995,8 +3084,8 @@ export default function OnboardingPage() {
                       </>
                     )}
 
-                    {/* Step 9: Challenges & Growth */}
-                    {step === 9 && (
+                    {/* Step 10: Challenges & Growth */}
+                    {step === 10 && (
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
@@ -3335,8 +3424,8 @@ export default function OnboardingPage() {
                       </>
                     )}
 
-                    {/* Step 10: Social & Environmental Impact */}
-                    {step === 10 && (
+                    {/* Step 11: Social & Environmental Impact */}
+                    {step === 11 && (
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
@@ -3430,8 +3519,8 @@ export default function OnboardingPage() {
                       </>
                     )}
 
-                    {/* Step 11: Consent & Follow Up */}
-                    {step === 11 && (
+                    {/* Step 12: Consent & Follow Up */}
+                    {step === 12 && (
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">

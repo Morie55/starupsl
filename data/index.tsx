@@ -116,3 +116,15 @@ export const timeframes = [
   "Medium-term (6-12 months)",
   "Long-term (12+ months)",
 ];
+
+export const turnoverRanges = [
+  "Less than $10,000",
+  "$10,000 - $50,000",
+  "$50,000 - $100,000",
+  "$100,000 - $500,000",
+  "$500,000 - $1 million",
+  "$1 million - $5 million",
+  "More than $5 million",
+  "Prefer not to say",
+  "Not applicable",
+];

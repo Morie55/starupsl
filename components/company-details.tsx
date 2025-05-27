@@ -1,485 +1,3 @@
-// "use client";
-
-// import { useEffect, useState } from "react";
-// import Link from "next/link";
-// import Image from "next/image";
-// import {
-//   ArrowLeft,
-//   BarChart3,
-//   Building2,
-//   Download,
-//   Edit,
-//   ExternalLink,
-//   FileText,
-//   Globe,
-//   Mail,
-//   MapPin,
-//   MoreHorizontal,
-//   Phone,
-//   Plus,
-//   Share2,
-// } from "lucide-react";
-
-// import { Badge } from "@/components/ui/badge";
-// import { Button } from "@/components/ui/button";
-// import {
-//   Card,
-//   CardContent,
-//   CardDescription,
-//   CardFooter,
-//   CardHeader,
-//   CardTitle,
-// } from "@/components/ui/card";
-// import {
-//   DropdownMenu,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuSeparator,
-//   DropdownMenuTrigger,
-// } from "@/components/ui/dropdown-menu";
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// import { FundingRoundsPage } from "@/components/funding-rounds-page";
-// import RoundsTable from "@/components/rounds-table";
-// import { getAllRounds, getCompanyRounds } from "@/app/actions/round-actions";
-// import { set } from "mongoose";
-// import HasPermissionC from "@/app/_permission/clientPermission";
-// import { useUser } from "@clerk/nextjs";
-
-// export default function CompanyDetailsPage({ company }: any) {
-//   const [activeTab, setActiveTab] = useState("overview");
-//   const [rounds, setRounds] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const { user } = useUser();
-
-//   const getInitials = (name: string) => {
-//     return name
-//       .split(" ")
-//       .map((part) => part[0])
-//       .join("")
-//       .toUpperCase();
-//   };
-
-//   // Format currency
-//   const formatCurrency = (amount: number) => {
-//     return new Intl.NumberFormat("en-US", {
-//       style: "currency",
-//       currency: "USD",
-//       maximumFractionDigits: 0,
-//     }).format(amount);
-//   };
-
-//   // Format date string to readable format
-//   const formatDate = (dateString: string) => {
-//     const options: Intl.DateTimeFormatOptions = {
-//       year: "numeric",
-//       month: "long",
-//       day: "numeric",
-//     };
-//     return new Date(dateString).toLocaleDateString(undefined, options);
-//   };
-
-//   const fetchRounds = async () => {
-//     setLoading(true);
-//     const rounds: any = await getCompanyRounds(company._id);
-
-//     setRounds(rounds);
-//     setLoading(false);
-//   };
-
-//   useEffect(() => {
-//     fetchRounds();
-//   }, [company._id]);
-
-//   return (
-//     <div className="container mx-auto px-4 py-6 max-w-7xl">
-//       {/* Back button and actions */}
-//       <div className="flex items-center justify-between mb-6">
-//         <Link
-//           href="/companies"
-//           className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground"
-//         >
-//           <ArrowLeft className="mr-2 h-4 w-4" />
-//           Back to Companies
-//         </Link>
-//         <div className="flex items-center gap-2">
-//           <Button variant="default" size="sm">
-//             Follow
-//           </Button>
-//           <Button variant="outline" size="sm">
-//             <Share2 className="mr-2 h-4 w-4" />
-//             Share
-//           </Button>
-
-//           {user?.id === company.userId && (
-//             <Link href="/companies/id/edit">
-//               <Button variant="outline" size="sm">
-//                 <Edit className="mr-2 h-4 w-4" />
-//                 Edit
-//               </Button>
-//             </Link>
-//           )}
-
-//           <DropdownMenu>
-//             <DropdownMenuTrigger asChild>
-//               <Button variant="outline" size="sm">
-//                 <MoreHorizontal className="h-4 w-4" />
-//                 <span className="sr-only">More options</span>
-//               </Button>
-//             </DropdownMenuTrigger>
-//             <DropdownMenuContent align="end">
-//               <DropdownMenuItem>Export as PDF</DropdownMenuItem>
-//               <DropdownMenuItem>Print details</DropdownMenuItem>
-//               <DropdownMenuSeparator />
-//               {user?.id === company.userId && (
-//                 <DropdownMenuItem className="text-destructive">
-//                   Delete company
-//                 </DropdownMenuItem>
-//               )}
-//             </DropdownMenuContent>
-//           </DropdownMenu>
-//         </div>
-//       </div>
-
-//       {/* Company header */}
-//       <div className="flex flex-col md:flex-row gap-6 items-start mb-8">
-//         <div className="flex-shrink-0">
-//           <div className="relative h-20 w-20 rounded-lg overflow-hidden border bg-background">
-//             <Image
-//               src={company.logo || "/placeholder.svg"}
-//               alt={`${company.name} logo`}
-//               fill
-//               className="object-cover"
-//               sizes="(max-width: 768px) 80px, 80px"
-//             />
-//           </div>
-//         </div>
-//         <div className="flex-grow">
-//           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-//             <div>
-//               <div className="flex items-center gap-3">
-//                 <h1 className="text-2xl font-bold">{company.name}</h1>
-//                 <Badge variant="outline" className="font-normal">
-//                   {company.stage}
-//                 </Badge>
-//               </div>
-//               <p className="text-muted-foreground mt-1">
-//                 {company.missionStatement}
-//               </p>
-//             </div>
-//             <div className="flex items-center gap-1">
-//               <div className="flex items-center">
-//                 <Building2 className="h-4 w-4 text-muted-foreground" />
-//                 <span className="ml-1">{company.sector}</span>
-//               </div>
-//               <span className="text-muted-foreground mx-2">•</span>
-//               <div className="flex items-center">
-//                 <MapPin className="h-4 w-4 text-muted-foreground" />
-//                 <span className="ml-1">{company.location}</span>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Key metrics */}
-//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-//         <Card>
-//           <CardHeader className="pb-2">
-//             <CardDescription>Founded</CardDescription>
-//           </CardHeader>
-//           <CardContent>
-//             <div className="text-2xl font-bold">
-//               {formatDate(company.foundedAt)}
-//             </div>
-//           </CardContent>
-//         </Card>
-//         <Card>
-//           <CardHeader className="pb-2">
-//             <CardDescription>Funding Status</CardDescription>
-//           </CardHeader>
-//           <CardContent>
-//             <div className="flex items-center">
-//               <div className="text-2xl font-bold">{company.fundingStatus}</div>
-//               <Badge className="ml-2 bg-green-100 text-green-800">
-//                 {formatCurrency(company.amountRaised)}
-//               </Badge>
-//             </div>
-//           </CardContent>
-//         </Card>
-//         <Card>
-//           <CardHeader className="pb-2">
-//             <CardDescription>Funding Needed</CardDescription>
-//           </CardHeader>
-//           <CardContent>
-//             <div className="text-2xl font-bold">
-//               {formatCurrency(company.fundingNeeded)}
-//             </div>
-//           </CardContent>
-//         </Card>
-//         <Card>
-//           <CardHeader className="pb-2">
-//             <CardDescription>Team Size</CardDescription>
-//           </CardHeader>
-//           <CardContent>
-//             <div className="text-2xl font-bold">{company.employeesRange}</div>
-//           </CardContent>
-//         </Card>
-//       </div>
-
-//       {/* Tabs and content */}
-//       <Tabs
-//         value={activeTab}
-//         onValueChange={setActiveTab}
-//         className="space-y-4"
-//       >
-//         <TabsList className="bg-background border">
-//           <TabsTrigger value="overview">Overview</TabsTrigger>
-//           <TabsTrigger value="funding">Funding</TabsTrigger>
-//           <TabsTrigger value="documents">Documents</TabsTrigger>
-//           <TabsTrigger value="contact">Contact</TabsTrigger>
-//         </TabsList>
-
-//         {/* Overview Tab */}
-//         <TabsContent value="overview" className="space-y-6">
-//           <Card>
-//             <CardHeader>
-//               <CardTitle>Company Profile</CardTitle>
-//             </CardHeader>
-//             <CardContent className="space-y-4">
-//               <p className="whitespace-pre-line">{company.description}</p>
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4">
-//                 <div className="flex items-center justify-between">
-//                   <span className="text-muted-foreground">Industry</span>
-//                   <span className="font-medium">{company.sector}</span>
-//                 </div>
-//                 <div className="flex items-center justify-between">
-//                   <span className="text-muted-foreground">Company Type</span>
-//                   <span className="font-medium">{company.type}</span>
-//                 </div>
-//                 <div className="flex items-center justify-between">
-//                   <span className="text-muted-foreground">Founded</span>
-//                   <span className="font-medium">
-//                     {formatDate(company.foundedAt)}
-//                   </span>
-//                 </div>
-//                 <div className="flex items-center justify-between">
-//                   <span className="text-muted-foreground">
-//                     Registration Number
-//                   </span>
-//                   <span className="font-medium">
-//                     {company.registrationNumber}
-//                   </span>
-//                 </div>
-//                 <div className="flex items-center justify-between">
-//                   <span className="text-muted-foreground">Location</span>
-//                   <span className="font-medium">{company.location}</span>
-//                 </div>
-//                 <div className="flex items-center justify-between">
-//                   <span className="text-muted-foreground">Team Size</span>
-//                   <span className="font-medium">{company.employeesRange}</span>
-//                 </div>
-//               </div>
-//             </CardContent>
-//           </Card>
-
-//           <Card>
-//             <CardHeader>
-//               <CardTitle>Mission Statement</CardTitle>
-//             </CardHeader>
-//             <CardContent>
-//               <blockquote className="border-l-4 pl-4 italic">
-//                 "{company.missionStatement}"
-//               </blockquote>
-//             </CardContent>
-//           </Card>
-//         </TabsContent>
-
-//         {/* Funding Tab */}
-//         <TabsContent value="funding" className="space-y-6">
-//           <Card>
-//             {/* Header */}
-//             <div className=" pt-4 px-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-//               <div>
-//                 <h1 className="text-2xl font-bold">Funding Rounds</h1>
-//                 <p className="text-muted-foreground">
-//                   Manage and track all your funding rounds
-//                 </p>
-//               </div>
-//               <div className="flex gap-2">
-//                 {user?.id === company.userId && (
-//                   <Link href="/rounds/new">
-//                     <Button>
-//                       <Plus className="h-4 w-4 mr-2" />
-//                       New Round
-//                     </Button>
-//                   </Link>
-//                 )}
-//               </div>
-//             </div>
-//             <RoundsTable rounds={rounds} loading={loading} />
-//             <CardFooter>
-//               <Button className="w-full">Contact for Investment</Button>
-//             </CardFooter>
-//           </Card>
-//         </TabsContent>
-
-//         {/* Documents Tab */}
-//         <TabsContent value="documents" className="space-y-6">
-//           <Card>
-//             <CardHeader>
-//               <CardTitle>Company Documents</CardTitle>
-//               <CardDescription>
-//                 Important documents and resources
-//               </CardDescription>
-//             </CardHeader>
-//             <CardContent>
-//               <div className="space-y-4">
-//                 <div className="flex items-center justify-between p-4 border rounded-lg">
-//                   <div className="flex items-center">
-//                     <FileText className="h-5 w-5 text-muted-foreground mr-3" />
-//                     <div>
-//                       <h3 className="font-medium">Founding Documents</h3>
-//                       <p className="text-sm text-muted-foreground">
-//                         Legal incorporation documents
-//                       </p>
-//                     </div>
-//                   </div>
-//                   <Button variant="outline" size="sm" asChild>
-//                     <a
-//                       href={company.foundingDocuments}
-//                       target="_blank"
-//                       rel="noopener noreferrer"
-//                     >
-//                       <Download className="mr-2 h-4 w-4" />
-//                       Download
-//                     </a>
-//                   </Button>
-//                 </div>
-
-//                 <div className="flex items-center justify-between p-4 border rounded-lg">
-//                   <div className="flex items-center">
-//                     <FileText className="h-5 w-5 text-muted-foreground mr-3" />
-//                     <div>
-//                       <h3 className="font-medium">Pitch Deck</h3>
-//                       <p className="text-sm text-muted-foreground">
-//                         Company presentation for investors
-//                       </p>
-//                     </div>
-//                   </div>
-//                   <Button variant="outline" size="sm" asChild>
-//                     <a
-//                       href={company.pitchDeck}
-//                       target="_blank"
-//                       rel="noopener noreferrer"
-//                     >
-//                       <Download className="mr-2 h-4 w-4" />
-//                       Download
-//                     </a>
-//                   </Button>
-//                 </div>
-//               </div>
-//             </CardContent>
-//             <CardFooter>
-//               <Button variant="outline" className="w-full">
-//                 Upload New Document
-//               </Button>
-//             </CardFooter>
-//           </Card>
-//         </TabsContent>
-
-//         {/* Contact Tab */}
-//         <TabsContent value="contact" className="space-y-6">
-//           <Card>
-//             <CardHeader>
-//               <CardTitle>Contact Information</CardTitle>
-//             </CardHeader>
-//             <CardContent>
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-//                 <div className="space-y-4">
-//                   <h3 className="font-semibold">Company Contact</h3>
-//                   <div className="space-y-3">
-//                     <div className="flex items-start">
-//                       <Mail className="h-5 w-5 text-muted-foreground mr-3 mt-0.5" />
-//                       <div>
-//                         <p className="text-sm text-muted-foreground">Email</p>
-//                         <a
-//                           href={`mailto:${company.email}`}
-//                           className="font-medium text-primary"
-//                         >
-//                           {company.email}
-//                         </a>
-//                       </div>
-//                     </div>
-//                     <div className="flex items-start">
-//                       <Phone className="h-5 w-5 text-muted-foreground mr-3 mt-0.5" />
-//                       <div>
-//                         <p className="text-sm text-muted-foreground">Phone</p>
-//                         <a
-//                           href={`tel:${company.phone}`}
-//                           className="font-medium"
-//                         >
-//                           {company.phone}
-//                         </a>
-//                       </div>
-//                     </div>
-//                     <div className="flex items-start">
-//                       <MapPin className="h-5 w-5 text-muted-foreground mr-3 mt-0.5" />
-//                       <div>
-//                         <p className="text-sm text-muted-foreground">Address</p>
-//                         <p className="font-medium">{company.address}</p>
-//                       </div>
-//                     </div>
-//                     <div className="flex items-start">
-//                       <Globe className="h-5 w-5 text-muted-foreground mr-3 mt-0.5" />
-//                       <div>
-//                         <p className="text-sm text-muted-foreground">Website</p>
-//                         <a
-//                           href={company.website}
-//                           target="_blank"
-//                           rel="noopener noreferrer"
-//                           className="font-medium text-primary flex items-center"
-//                         >
-//                           {company.website.replace("https://", "")}
-//                           <ExternalLink className="ml-1 h-3 w-3" />
-//                         </a>
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </div>
-
-//                 <div className="space-y-4">
-//                   <h3 className="font-semibold">Social Media</h3>
-//                   <div className="space-y-3">
-//                     {company.socialLinks.map((social: any, index: any) => (
-//                       <div key={index} className="flex items-start">
-//                         <Globe className="h-5 w-5 text-muted-foreground mr-3 mt-0.5" />
-//                         <div>
-//                           <p className="text-sm text-muted-foreground">
-//                             {social.name}
-//                           </p>
-//                           <a
-//                             href={social.link}
-//                             target="_blank"
-//                             rel="noopener noreferrer"
-//                             className="font-medium text-primary flex items-center"
-//                           >
-//                             {social.link.replace("https://", "")}
-//                             <ExternalLink className="ml-1 h-3 w-3" />
-//                           </a>
-//                         </div>
-//                       </div>
-//                     ))}
-//                   </div>
-//                 </div>
-//               </div>
-//             </CardContent>
-//           </Card>
-//         </TabsContent>
-//       </Tabs>
-//     </div>
-//   );
-// }
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -745,41 +263,24 @@ export default function CompanyDetailsPage({
   }
 
   return (
-    <div className=" min-h-screen">
+    <div className="min-h-screen ">
       {/* Hero section with company info */}
-      <div className="dark:bg-accent border-b">
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="border-b dark:bg-accent">
+        <div className="container px-4 py-8 mx-auto max-w-7xl">
           {/* Back button */}
-          <div className="mb-6">
+          <div className="mb-6 ">
             <Link
               href="/companies"
-              className="inline-flex items-center text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              className="inline-flex items-center text-sm font-medium transition-colors text-slate-600 hover:text-slate-900 dark:text-white"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <ArrowLeft className="w-4 h-4 mr-2 " />
               Back to Companies
             </Link>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-8 items-start">
-            {/* Company logo */}
-            {/* <div className="flex-shrink-0">
-              <div className="relative h-28 w-28 rounded-xl overflow-hidden border bg-white shadow-sm flex items-center justify-center">
-                {company.logo ? (
-                  <Image
-                    src={company.logo || "/placeholder.svg"}
-                    alt={`${company.name} logo`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 112px, 112px"
-                  />
-                ) : (
-                  <Building2 className="h-14 w-14 text-slate-300" />
-                )}
-              </div>
-            </div> */}
-
+          <div className="flex flex-col items-start gap-8 md:flex-row">
             <div className="flex-shrink-0">
-              <div className="relative h-28 w-28 rounded-xl overflow-hidden border  shadow-sm flex items-center justify-center">
+              <div className="relative flex items-center justify-center overflow-hidden border shadow-sm h-28 w-28 rounded-xl">
                 {company?.logo ? (
                   <Image
                     src={company.logo || "/placeholder.svg"}
@@ -799,7 +300,7 @@ export default function CompanyDetailsPage({
             </div>
 
             {/* Company info */}
-            <div className="flex-grow space-y-4">
+            <div className="flex-grow space-y-4 dark:text-white">
               <div>
                 {/* <div className="flex flex-wrap items-center gap-3 mb-2">
                   <h1 className="text-3xl font-bold ">
@@ -824,18 +325,18 @@ export default function CompanyDetailsPage({
                 </div>
 
                 {/* {company.missionStatement && (
-                  <p className="text-slate-600 text-lg max-w-3xl">
+                  <p className="max-w-3xl text-lg text-slate-600">
                     {company.missionStatement}
                   </p>
                 )} */}
                 {company?.missionStatement && (
-                  <p className="text-slate-600 text-lg max-w-3xl">
+                  <p className="max-w-3xl text-lg text-slate-600">
                     {company.missionStatement}
                   </p>
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500">
+              <div className="flex flex-wrap items-center text-sm gap-x-6 gap-y-2 text-slate-500">
                 {/* <div className="flex items-center">
                   <Building2 className="h-4 w-4 mr-1.5 text-slate-400" />
                   <span>{company.sector}</span>
@@ -924,15 +425,15 @@ export default function CompanyDetailsPage({
             </div>
 
             {/* Action buttons */}
-            <div className="flex flex-col gap-2 md:items-end mt-4 md:mt-0 w-full md:w-auto">
-              <div className="flex items-center gap-2 w-full md:w-auto">
+            <div className="flex flex-col w-full gap-2 mt-4 md:items-end md:mt-0 md:w-auto">
+              <div className="flex items-center w-full gap-2 md:w-auto">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleShare}
                   className="flex-1 md:flex-none"
                 >
-                  <Share2 className="mr-2 h-4 w-4" />
+                  <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </Button>
 
@@ -942,7 +443,7 @@ export default function CompanyDetailsPage({
                     className="flex-1 md:flex-none"
                   >
                     <Button variant="outline" size="sm" className="w-full">
-                      <Edit className="mr-2 h-4 w-4" />
+                      <Edit className="w-4 h-4 mr-2" />
                       Edit
                     </Button>
                   </Link>
@@ -959,7 +460,7 @@ export default function CompanyDetailsPage({
                 {user?.id === company?.userId && (
                   <Link
                     href={`/companies/${company?._id}/edit`}
-                    className="flex-1 md:flex-none"
+                    className="flex items-center justify-center flex-1 px-4 py-2 transition-colors border rounded-md md:flex-none bg-inherit hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600"
                   >
                     Edit Company
                   </Link>
@@ -968,7 +469,7 @@ export default function CompanyDetailsPage({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
+                      <MoreHorizontal className="w-4 h-4" />
                       <span className="sr-only">More options</span>
                     </Button>
                   </DropdownMenuTrigger>
@@ -996,10 +497,10 @@ export default function CompanyDetailsPage({
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container px-4 py-8 mx-auto max-w-7xl">
         {/* Key metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <Card className="border-0 shadow-md dark:bg-accent  overflow-hidden">
+        <div className="grid grid-cols-1 gap-6 mb-10 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="overflow-hidden border-0 shadow-md dark:bg-accent">
             <CardHeader className="pb-2 ">
               <CardDescription className="font-medium">
                 Business Age
@@ -1009,7 +510,7 @@ export default function CompanyDetailsPage({
               {/* {getBusinessAge(company.foundedAt)}
               </div>
               {company.foundedAt && (
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="mt-1 text-sm text-slate-500">
                   Founded {formatDate(company.foundedAt)}
                 </p>
               )} */}
@@ -1017,14 +518,14 @@ export default function CompanyDetailsPage({
                 {company?.foundedAt ? getBusinessAge(company.foundedAt) : "N/A"}
               </div>
               {company?.foundedAt && (
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="mt-1 text-sm text-slate-500">
                   Founded on {new Date(company.foundedAt).toLocaleDateString()}
                 </p>
               )}
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-md dark:bg-accent  overflow-hidden">
+          <Card className="overflow-hidden border-0 shadow-md dark:bg-accent">
             <CardHeader className="pb-2 ">
               <CardDescription className="font-medium">
                 Funding Status
@@ -1043,7 +544,7 @@ export default function CompanyDetailsPage({
               </div>
               {/* {company.amountRaised && company.amountRaised > 0 && (
                 <div className="mt-2">
-                  <div className="flex justify-between text-sm mb-1">
+                  <div className="flex justify-between mb-1 text-sm">
                     <span className="text-slate-500">
                       {formatCurrency(company.amountRaised)} raised
                     </span>
@@ -1061,9 +562,9 @@ export default function CompanyDetailsPage({
               )} */}
               {company?.amountRaised && company.amountRaised > 0 && (
                 <div className="mt-2">
-                  <div className="flex justify-between text-sm mb-1">
+                  <div className="flex justify-between mb-1 text-sm">
                     <span className="text-slate-500">Amount Raised</span>
-                    <span className=" font-medium">
+                    <span className="font-medium ">
                       ${company.amountRaised.toLocaleString()}
                     </span>
                   </div>
@@ -1072,7 +573,7 @@ export default function CompanyDetailsPage({
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-md dark:bg-accent  overflow-hidden">
+          <Card className="overflow-hidden border-0 shadow-md dark:bg-accent">
             <CardHeader className="pb-2 ">
               <CardDescription className="font-medium">
                 Team Size
@@ -1083,7 +584,7 @@ export default function CompanyDetailsPage({
                 {company.employeesRange || "Not specified"}
               </div>
               {company.founderName && (
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="mt-1 text-sm text-slate-500">
                   Founded by {company.founderName}
                 </p>
               )} */}
@@ -1091,32 +592,32 @@ export default function CompanyDetailsPage({
                 {company?.employeesRange || "Not specified"}
               </div>
               {company?.founderName && (
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="mt-1 text-sm text-slate-500">
                   Founder: {company.founderName}
                 </p>
               )}
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-md dark:bg-accent  overflow-hidden">
+          <Card className="overflow-hidden border-0 shadow-md dark:bg-accent">
             <CardHeader className="pb-2 ">
               <CardDescription className="font-medium">
                 Business Model
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* <div className="text-2xl font-bold  truncate">
+              {/* <div className="text-2xl font-bold truncate">
                 {company.businessModel === "Other"
                   ? company.otherBusinessModel
                   : company.businessModel || "Not specified"}
               </div>
               {company.type && (
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="mt-1 text-sm text-slate-500">
                   {company.type} company
                 </p>
               )} */}
 
-              <div className="text-2xl font-bold  truncate">
+              <div className="text-2xl font-bold truncate">
                 {company?.businessModel === "Other"
                   ? company?.otherBusinessModel || "Not specified"
                   : company?.businessModel || "Not specified"}
@@ -1132,7 +633,7 @@ export default function CompanyDetailsPage({
           className="space-y-6"
         >
           <div className="overflow-x-auto border-b">
-            <TabsList className="bg-transparent h-12 w-full justify-start rounded-none gap-2">
+            <TabsList className="justify-start w-full h-12 gap-2 bg-transparent rounded-none">
               <TabsTrigger
                 value="overview"
                 className="data-[state=active]:border-b-2 data-[state=active]:border-slate-900 data-[state=active]:shadow-none rounded-none h-12 px-4"
@@ -1180,19 +681,19 @@ export default function CompanyDetailsPage({
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-8">
-                <Card className="dark:border shadow-md overflow-hidden">
-                  <CardHeader className="dark:bg-accent border-b">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              <div className="space-y-8 lg:col-span-2">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b dark:bg-accent">
                     <CardTitle className="text-xl">Company Profile</CardTitle>
                   </CardHeader>
                   {/* <CardContent className="p-6">
                     {company.description ? (
-                      <p className="whitespace-pre-line text-slate-700 leading-relaxed">
+                      <p className="leading-relaxed whitespace-pre-line text-slate-700">
                         {company.description}
                       </p>
                     ) : (
-                      <p className="text-slate-500 italic">
+                      <p className="italic text-slate-500">
                         No company description provided.
                       </p>
                     )}
@@ -1200,7 +701,7 @@ export default function CompanyDetailsPage({
 
                   <CardContent className="p-6">
                     {company?.description ? (
-                      <p className="whitespace-pre-line text-slate-700 leading-relaxed">
+                      <p className="leading-relaxed whitespace-pre-line text-slate-700 dark:text-white">
                         {company.description}
                       </p>
                     ) : (
@@ -1209,15 +710,15 @@ export default function CompanyDetailsPage({
                   </CardContent>
                 </Card>
 
-                <Card className="dark:border shadow-md overflow-hidden">
-                  <CardHeader className="dark:bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b dark:bg-accent">
                     <CardTitle className="text-xl">Key Information</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                       <div className="space-y-6">
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Industry
                           </h3>
                           {/* <p className="font-medium text-slate-900">
@@ -1231,7 +732,7 @@ export default function CompanyDetailsPage({
                           </p>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Company Type
                           </h3>
                           {/* <p className="font-medium ">
@@ -1242,7 +743,7 @@ export default function CompanyDetailsPage({
                           </p>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Founded
                           </h3>
                           {/* <p className="font-medium ">
@@ -1257,7 +758,7 @@ export default function CompanyDetailsPage({
                           </p>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Registration Number
                           </h3>
                           {/* <p className="font-medium ">
@@ -1270,7 +771,7 @@ export default function CompanyDetailsPage({
                       </div>
                       <div className="space-y-6">
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Location
                           </h3>
                           <p className="font-medium ">
@@ -1278,7 +779,7 @@ export default function CompanyDetailsPage({
                           </p>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Team Size
                           </h3>
                           <p className="font-medium ">
@@ -1286,7 +787,7 @@ export default function CompanyDetailsPage({
                           </p>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Business Model
                           </h3>
                           <p className="font-medium ">
@@ -1296,7 +797,7 @@ export default function CompanyDetailsPage({
                           </p>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Head Office
                           </h3>
                           <p className="font-medium ">
@@ -1310,23 +811,23 @@ export default function CompanyDetailsPage({
               </div>
 
               <div className="space-y-8">
-                <Card className="dark:border shadow-md overflow-hidden">
-                  <CardHeader className="dark:bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b dark:bg-accent">
                     <CardTitle className="text-xl">Mission Statement</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
                     {/* {company.missionStatement ? (
-                      <blockquote className="border-l-4 border-slate-200 pl-4 italic text-slate-700">
+                      <blockquote className="pl-4 italic border-l-4 border-slate-200 text-slate-700">
                         "{company.missionStatement}"
                       </blockquote>
                     ) : (
-                      <p className="text-slate-500 italic">
+                      <p className="italic text-slate-500">
                         No mission statement provided.
                       </p>
                     )} */}
                     <CardContent className="p-6">
                       {company?.missionStatement ? (
-                        <blockquote className="border-l-4 border-slate-200 pl-4 italic text-slate-700">
+                        <blockquote className="pl-4 italic border-l-4 border-slate-200 text-slate-700 dark:text-white">
                           "{company.missionStatement}"
                         </blockquote>
                       ) : (
@@ -1338,8 +839,8 @@ export default function CompanyDetailsPage({
                   </CardContent>
                 </Card>
 
-                <Card className="dark:border shadow-md overflow-hidden">
-                  <CardHeader className="dark:bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b dark:bg-accent">
                     <CardTitle className="text-xl">
                       Founder Information
                     </CardTitle>
@@ -1347,7 +848,7 @@ export default function CompanyDetailsPage({
                   <CardContent className="p-6">
                     <div className="space-y-4">
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-1">
+                        <h3 className="mb-1 text-sm font-medium text-slate-500">
                           Name
                         </h3>
                         <p className="font-medium ">
@@ -1357,7 +858,7 @@ export default function CompanyDetailsPage({
                       {company?.founderGender &&
                         company.founderGender !== "Prefer not to say" && (
                           <div>
-                            <h3 className="text-sm font-medium text-slate-500 mb-1">
+                            <h3 className="mb-1 text-sm font-medium text-slate-500">
                               Founder Gender
                             </h3>
                             <p className="font-medium ">
@@ -1367,7 +868,7 @@ export default function CompanyDetailsPage({
                         )}
                       {company?.founderDob && (
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Age
                           </h3>
                           <p className="font-medium ">
@@ -1377,7 +878,7 @@ export default function CompanyDetailsPage({
                       )}
                       {company?.founderEducation && (
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Education
                           </h3>
                           <p className="font-medium ">
@@ -1390,8 +891,8 @@ export default function CompanyDetailsPage({
                 </Card>
 
                 {/* Quick contact card */}
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">Quick Contact</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -1401,7 +902,7 @@ export default function CompanyDetailsPage({
                           <p className="text-sm text-slate-500">Email</p>
                           <a
                             href={`mailto:${company.email}`}
-                            className="font-medium  hover:text-slate-700"
+                            className="font-medium hover:text-slate-700"
                           >
                             {company.email}
                           </a>
@@ -1427,7 +928,7 @@ export default function CompanyDetailsPage({
                               href={company.website}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="font-medium  hover:text-slate-700"
+                              className="font-medium hover:text-slate-700"
                             >
                               {company.website}
                             </a>
@@ -1444,10 +945,10 @@ export default function CompanyDetailsPage({
 
           {/* Business Details Tab */}
           <TabsContent value="business" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-8">
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              <div className="space-y-8 lg:col-span-2">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">
                       Business Information
                     </CardTitle>
@@ -1455,7 +956,7 @@ export default function CompanyDetailsPage({
                   <CardContent className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-3">
+                        <h3 className="mb-3 text-sm font-medium text-slate-500">
                           Business Characteristics
                         </h3>
                         <div className="space-y-4">
@@ -1532,7 +1033,7 @@ export default function CompanyDetailsPage({
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-3">
+                        <h3 className="mb-3 text-sm font-medium text-slate-500">
                           Compliance & Licensing
                         </h3>
                         <div className="space-y-4">
@@ -1587,8 +1088,8 @@ export default function CompanyDetailsPage({
                     </div>
 
                     {company?.planningExpansion && company?.expansionPlans && (
-                      <div className="mt-8 pt-6 border-t border-slate-100">
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                      <div className="pt-6 mt-8 border-t border-slate-100">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">
                           Expansion Plans
                         </h3>
                         <p className="text-slate-700">
@@ -1599,8 +1100,8 @@ export default function CompanyDetailsPage({
                   </CardContent>
                 </Card>
 
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">
                       Business Challenges
                     </CardTitle>
@@ -1609,10 +1110,10 @@ export default function CompanyDetailsPage({
                     {company?.businessChallenges &&
                     company.businessChallenges.length > 0 ? (
                       <>
-                        <h3 className="text-sm font-medium text-slate-500 mb-3">
+                        <h3 className="mb-3 text-sm font-medium text-slate-500">
                           Business Challenges
                         </h3>
-                        <ul className="list-disc list-inside text-slate-700">
+                        <ul className="list-disc list-inside text-slate-700 dark:text-white">
                           {company.businessChallenges.map(
                             (challenge, index) => (
                               <li key={index}>{challenge}</li>
@@ -1630,18 +1131,18 @@ export default function CompanyDetailsPage({
               </div>
 
               <div>
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">Business Summary</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
                     <div className="space-y-6">
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">
                           Business Type
                         </h3>
                         <div className="flex items-center space-x-2">
-                          <Building2 className="h-5 w-5 text-slate-400" />
+                          <Building2 className="w-5 h-5 text-slate-400" />
                           <span className="font-medium ">
                             {company?.type || "Not specified"}
                           </span>
@@ -1649,18 +1150,18 @@ export default function CompanyDetailsPage({
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">
                           Stage
                         </h3>
                         {/* <div className="flex items-center space-x-2">
-                          <TrendingUp className="h-5 w-5 text-slate-400" />
+                          <TrendingUp className="w-5 h-5 text-slate-400" />
                           <span className="font-medium ">
                             {company.stage || "Not specified"}
                           </span>
                         </div> */}
                         {company && (
                           <div className="flex items-center space-x-2">
-                            <TrendingUp className="h-5 w-5 text-slate-400" />
+                            <TrendingUp className="w-5 h-5 text-slate-400" />
                             <span className="font-medium ">
                               {company.stage || "Not specified"}
                             </span>
@@ -1669,11 +1170,11 @@ export default function CompanyDetailsPage({
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500 dark:text-white">
                           Business Age
                         </h3>
                         {/* <div className="flex items-center space-x-2">
-                          <Calendar className="h-5 w-5 text-slate-400" />
+                          <Calendar className="w-5 h-5 text-slate-400" />
                           <span className="font-medium ">
                             {getBusinessAge(company.foundedAt)}
                           </span>
@@ -1686,11 +1187,11 @@ export default function CompanyDetailsPage({
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500 dark:text-white">
                           Team Size
                         </h3>
                         {/* <div className="flex items-center space-x-2">
-                          <Users className="h-5 w-5 text-slate-400" />
+                          <Users className="w-5 h-5 text-slate-400" />
                           <span className="font-medium ">
                             {company.employeesRange || "Not specified"}
                           </span>
@@ -1703,13 +1204,13 @@ export default function CompanyDetailsPage({
                       <Separator className="my-2" />
 
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">
                           Business Strengths
                         </h3>
-                        <div className="space-y-2">
+                        <div className="space-y-2 ">
                           {/* {company.isYouthLed && (
                             <div className="flex items-center space-x-2">
-                              <Star className="h-4 w-4 text-amber-500" />
+                              <Star className="w-4 h-4 text-amber-500" />
                               <span className="text-slate-700">
                                 Youth-led business
                               </span>
@@ -1717,8 +1218,8 @@ export default function CompanyDetailsPage({
                           )} */}
                           {company?.isYouthLed && (
                             <div className="flex items-center space-x-2">
-                              <Star className="h-4 w-4 text-amber-500" />
-                              <span className="text-slate-700">
+                              <Star className="w-4 h-4 text-amber-500" />
+                              <span className="text-slate-700 dark:text-white">
                                 Youth-led business
                               </span>
                             </div>
@@ -1726,7 +1227,7 @@ export default function CompanyDetailsPage({
 
                           {/* {company.isWomanLed && (
                             <div className="flex items-center space-x-2">
-                              <Star className="h-4 w-4 text-amber-500" />
+                              <Star className="w-4 h-4 text-amber-500" />
                               <span className="text-slate-700">
                                 Woman-led business
                               </span>
@@ -1734,8 +1235,8 @@ export default function CompanyDetailsPage({
                           )} */}
                           {company?.isWomanLed && (
                             <div className="flex items-center space-x-2">
-                              <Star className="h-4 w-4 text-amber-500" />
-                              <span className="text-slate-700">
+                              <Star className="w-4 h-4 text-amber-500" />
+                              <span className="text-slate-700 dark:text-white">
                                 Woman-led business
                               </span>
                             </div>
@@ -1743,8 +1244,8 @@ export default function CompanyDetailsPage({
 
                           {company?.hasIntellectualProperty && (
                             <div className="flex items-center space-x-2">
-                              <Star className="h-4 w-4 text-amber-500" />
-                              <span className="text-slate-700">
+                              <Star className="w-4 h-4 text-amber-500" />
+                              <span className="text-slate-700 dark:text-white">
                                 Has intellectual property
                               </span>
                             </div>
@@ -1752,7 +1253,7 @@ export default function CompanyDetailsPage({
 
                           {/* {company.isInnovative && (
                             <div className="flex items-center space-x-2">
-                              <Star className="h-4 w-4 text-amber-500" />
+                              <Star className="w-4 h-4 text-amber-500" />
                               <span className="text-slate-700">
                                 Innovative business model
                               </span>
@@ -1761,8 +1262,8 @@ export default function CompanyDetailsPage({
 
                           {company?.isInnovative && (
                             <div className="flex items-center space-x-2">
-                              <Star className="h-4 w-4 text-amber-500" />
-                              <span className="text-slate-700">
+                              <Star className="w-4 h-4 text-amber-500" />
+                              <span className="text-slate-700 dark:text-white">
                                 Innovative business model
                               </span>
                             </div>
@@ -1770,7 +1271,7 @@ export default function CompanyDetailsPage({
 
                           {/* {company.planningExpansion && (
                             <div className="flex items-center space-x-2">
-                              <Star className="h-4 w-4 text-amber-500" />
+                              <Star className="w-4 h-4 text-amber-500" />
                               <span className="text-slate-700">
                                 Planning expansion
                               </span>
@@ -1778,8 +1279,8 @@ export default function CompanyDetailsPage({
                           )} */}
                           {company?.planningExpansion && (
                             <div className="flex items-center space-x-2">
-                              <Star className="h-4 w-4 text-amber-500" />
-                              <span className="text-slate-700">
+                              <Star className="w-4 h-4 text-amber-500" />
+                              <span className="text-slate-700 dark:text-white">
                                 Planning expansion
                               </span>
                             </div>
@@ -1790,7 +1291,7 @@ export default function CompanyDetailsPage({
                             !company?.hasIntellectualProperty &&
                             !company?.isInnovative &&
                             !company?.planningExpansion && (
-                              <span className="text-slate-500 italic">
+                              <span className="italic text-slate-500">
                                 No specific strengths highlighted
                               </span>
                             )}
@@ -1805,10 +1306,10 @@ export default function CompanyDetailsPage({
 
           {/* Financial Tab */}
           <TabsContent value="financial" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-8">
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              <div className="space-y-8 lg:col-span-2">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">
                       Financial Overview
                     </CardTitle>
@@ -1817,7 +1318,7 @@ export default function CompanyDetailsPage({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                       <div className="space-y-4">
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Funding Status
                           </h3>
                           <p className="font-medium ">
@@ -1825,7 +1326,7 @@ export default function CompanyDetailsPage({
                           </p>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Amount Raised
                           </h3>
                           <p className="font-medium ">
@@ -1833,7 +1334,7 @@ export default function CompanyDetailsPage({
                           </p>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Funding Needed
                           </h3>
                           <p className="font-medium ">
@@ -1842,7 +1343,7 @@ export default function CompanyDetailsPage({
                         </div>
                         {company?.amountRaised && company?.fundingNeeded && (
                           <div>
-                            <h3 className="text-sm font-medium text-slate-500 mb-2">
+                            <h3 className="mb-2 text-sm font-medium text-slate-500">
                               Funding Progress
                             </h3>
                             <div className="space-y-2">
@@ -1866,7 +1367,7 @@ export default function CompanyDetailsPage({
 
                       <div className="space-y-4">
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Business Bank Account
                           </h3>
                           <div className="flex items-center">
@@ -1901,7 +1402,7 @@ export default function CompanyDetailsPage({
                           </div>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-slate-500 mb-1">
+                          <h3 className="mb-1 text-sm font-medium text-slate-500">
                             Financial Records
                           </h3>
                           {company ? (
@@ -1909,7 +1410,7 @@ export default function CompanyDetailsPage({
                               {company.keepsFinancialRecords || "Not specified"}
                             </p>
                           ) : (
-                            <p className="text-slate-500 italic">
+                            <p className="italic text-slate-500">
                               Company data not available
                             </p>
                           )}
@@ -1919,13 +1420,13 @@ export default function CompanyDetailsPage({
                   </CardContent>
                 </Card>
 
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">Annual Turnover</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <Card className="border border-slate-200 shadow-sm">
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                      <Card className="border shadow-sm border-slate-200">
                         <CardHeader className="pb-2">
                           <CardDescription className="text-slate-500">
                             Previous Year
@@ -1937,13 +1438,13 @@ export default function CompanyDetailsPage({
                               {company.annualTurnoverBefore || "Not specified"}
                             </div>
                           ) : (
-                            <div className="text-slate-500 italic">
+                            <div className="italic text-slate-500">
                               Company data not available
                             </div>
                           )}
                         </CardContent>
                       </Card>
-                      <Card className="border border-slate-200 shadow-sm">
+                      <Card className="border shadow-sm border-slate-200">
                         <CardHeader className="pb-2">
                           <CardDescription className="text-slate-500">
                             Current Year (Est.)
@@ -1955,7 +1456,7 @@ export default function CompanyDetailsPage({
                           </div>
                         </CardContent>
                       </Card>
-                      <Card className="border border-slate-200 shadow-sm">
+                      <Card className="border shadow-sm border-slate-200">
                         <CardHeader className="pb-2">
                           <CardDescription className="text-slate-500">
                             Next Year (Proj.)
@@ -1971,8 +1472,8 @@ export default function CompanyDetailsPage({
                   </CardContent>
                 </Card>
 
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">
                       External Funding Sources
                     </CardTitle>
@@ -1985,7 +1486,7 @@ export default function CompanyDetailsPage({
                           <Badge
                             key={index}
                             variant="outline"
-                            className="bg-slate-50 text-slate-700 px-3 py-1"
+                            className="px-3 py-1 bg-slate-50 text-slate-700 dark:text-white"
                           >
                             {source}
                           </Badge>
@@ -1995,14 +1496,14 @@ export default function CompanyDetailsPage({
                           company.otherExternalFunding && (
                             <Badge
                               variant="outline"
-                              className="bg-slate-50 text-slate-700 px-3 py-1"
+                              className="px-3 py-1 bg-slate-50 text-slate-700 dark:text-white"
                             >
                               {company.otherExternalFunding}
                             </Badge>
                           )}
                       </div>
                     ) : (
-                      <p className="text-slate-500 italic">
+                      <p className="italic text-slate-500">
                         No external funding sources specified.
                       </p>
                     )}
@@ -2011,8 +1512,8 @@ export default function CompanyDetailsPage({
               </div>
 
               <div>
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">
                       Financial Documents
                     </CardTitle>
@@ -2022,7 +1523,7 @@ export default function CompanyDetailsPage({
                       {company?.fundingDocuments ? (
                         <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50">
                           <div className="flex items-center">
-                            <FileText className="h-5 w-5 text-slate-400 mr-3" />
+                            <FileText className="w-5 h-5 mr-3 text-slate-400" />
                             <div>
                               <h3 className="font-medium ">
                                 Funding Documents
@@ -2038,7 +1539,7 @@ export default function CompanyDetailsPage({
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              <Download className="mr-2 h-4 w-4" />
+                              <Download className="w-4 h-4 mr-2" />
                               Download
                             </a>
                           </Button>
@@ -2048,7 +1549,7 @@ export default function CompanyDetailsPage({
                       {company?.pitchDeck ? (
                         <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50">
                           <div className="flex items-center">
-                            <FileText className="h-5 w-5 text-slate-400 mr-3" />
+                            <FileText className="w-5 h-5 mr-3 text-slate-400" />
                             <div>
                               <h3 className="font-medium ">Pitch Deck</h3>
                               <p className="text-sm text-slate-500">
@@ -2062,7 +1563,7 @@ export default function CompanyDetailsPage({
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              <Download className="mr-2 h-4 w-4" />
+                              <Download className="w-4 h-4 mr-2" />
                               Download
                             </a>
                           </Button>
@@ -2071,11 +1572,11 @@ export default function CompanyDetailsPage({
 
                       {!company?.fundingDocuments && !company?.pitchDeck && (
                         <div className="flex flex-col items-center justify-center py-8 text-center">
-                          <FileText className="h-12 w-12 text-slate-300 mb-4" />
-                          <h3 className="font-medium text-lg mb-2 ">
+                          <FileText className="w-12 h-12 mb-4 text-slate-300" />
+                          <h3 className="mb-2 text-lg font-medium ">
                             No documents available
                           </h3>
-                          <p className="text-slate-500 max-w-md">
+                          <p className="max-w-md text-slate-500">
                             This company hasn't uploaded any financial documents
                             yet.
                           </p>
@@ -2096,10 +1597,10 @@ export default function CompanyDetailsPage({
 
           {/* Innovation & Impact Tab */}
           <TabsContent value="innovation" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-8">
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              <div className="space-y-8 lg:col-span-2">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">Innovation</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -2125,8 +1626,8 @@ export default function CompanyDetailsPage({
                           </div>
                           {company?.isInnovative &&
                             company?.innovationExplanation && (
-                              <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                                <p className="text-slate-700 text-sm">
+                              <div className="p-4 border rounded-lg bg-slate-50 border-slate-100">
+                                <p className="text-sm text-slate-700 dark:text-white">
                                   {company.innovationExplanation}
                                 </p>
                               </div>
@@ -2162,8 +1663,8 @@ export default function CompanyDetailsPage({
                   </CardContent>
                 </Card>
 
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">
                       Social & Environmental Impact
                     </CardTitle>
@@ -2225,12 +1726,12 @@ export default function CompanyDetailsPage({
                       (company.employsVulnerableGroups ||
                         company.addressesEnvironmentalSustainability) &&
                       company.impactInitiatives && (
-                        <div className="mt-6 pt-6 border-t border-slate-100">
-                          <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <div className="pt-6 mt-6 border-t border-slate-100">
+                          <h3 className="mb-2 text-sm font-medium text-slate-500">
                             Impact Initiatives
                           </h3>
-                          <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                            <p className="text-slate-700">
+                          <div className="p-4 border rounded-lg bg-slate-50 border-slate-100">
+                            <p className="text-slate-700 dark:text-white">
                               {company.impactInitiatives}
                             </p>
                           </div>
@@ -2241,8 +1742,8 @@ export default function CompanyDetailsPage({
               </div>
 
               <div>
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">
                       Ecosystem Participation
                     </CardTitle>
@@ -2250,7 +1751,7 @@ export default function CompanyDetailsPage({
                   <CardContent className="p-6">
                     <div className="space-y-6">
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">
                           Ecosystem Programs Interest
                         </h3>
                         <div className="flex items-center">
@@ -2274,14 +1775,14 @@ export default function CompanyDetailsPage({
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">
                           Impact Summary
                         </h3>
                         <div className="space-y-2">
                           {company && company.employsVulnerableGroups && (
                             <div className="flex items-center space-x-2">
-                              <Star className="h-4 w-4 text-amber-500" />
-                              <span className="text-slate-700">
+                              <Star className="w-4 h-4 text-amber-500" />
+                              <span className="text-slate-700 dark:text-white">
                                 Employs vulnerable groups
                               </span>
                             </div>
@@ -2290,8 +1791,8 @@ export default function CompanyDetailsPage({
                           {company &&
                             company.addressesEnvironmentalSustainability && (
                               <div className="flex items-center space-x-2">
-                                <Star className="h-4 w-4 text-amber-500" />
-                                <span className="text-slate-700">
+                                <Star className="w-4 h-4 text-amber-500" />
+                                <span className="text-slate-700 dark:text-white">
                                   Addresses environmental sustainability
                                 </span>
                               </div>
@@ -2299,7 +1800,7 @@ export default function CompanyDetailsPage({
 
                           {company && company.isInnovative && (
                             <div className="flex items-center space-x-2">
-                              <Star className="h-4 w-4 text-amber-500" />
+                              <Star className="w-4 h-4 text-amber-500" />
                               <span className="text-slate-700">
                                 Innovative business approach
                               </span>
@@ -2338,7 +1839,7 @@ export default function CompanyDetailsPage({
                       <Separator className="my-2" />
 
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">
                           Get Involved
                         </h3>
                         <Button className="w-full">Contact Company</Button>
@@ -2352,8 +1853,8 @@ export default function CompanyDetailsPage({
 
           {/* Documents Tab */}
           <TabsContent value="documents" className="space-y-8">
-            <Card className="dark:border  shadow-md overflow-hidden">
-              <CardHeader className="bg-accent border-b">
+            <Card className="overflow-hidden shadow-md dark:border">
+              <CardHeader className="border-b bg-accent">
                 <CardTitle className="text-xl">Company Documents</CardTitle>
                 <CardDescription>
                   Important documents and resources
@@ -2362,10 +1863,10 @@ export default function CompanyDetailsPage({
               <CardContent className="p-6">
                 <div className="space-y-4">
                   {company && company.fundingDocuments ? (
-                    <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
+                    <div className="flex items-center justify-between p-4 transition-colors border rounded-lg bg-slate-50 hover:bg-slate-100">
                       <div className="flex items-center">
-                        <div className="bg-white p-2 rounded-lg border mr-4">
-                          <FileText className="h-8 w-8 text-slate-400" />
+                        <div className="p-2 mr-4 bg-white border rounded-lg">
+                          <FileText className="w-8 h-8 text-slate-400" />
                         </div>
                         <div>
                           <h3 className="font-medium ">Funding Documents</h3>
@@ -2383,7 +1884,7 @@ export default function CompanyDetailsPage({
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                <Download className="mr-2 h-4 w-4" />
+                                <Download className="w-4 h-4 mr-2" />
                                 Download
                               </a>
                             </Button>
@@ -2397,10 +1898,10 @@ export default function CompanyDetailsPage({
                   ) : null}
 
                   {company?.pitchDeck ? (
-                    <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
+                    <div className="flex items-center justify-between p-4 transition-colors border rounded-lg bg-slate-50 hover:bg-slate-100">
                       <div className="flex items-center">
-                        <div className="bg-white p-2 rounded-lg border mr-4">
-                          <FileText className="h-8 w-8 text-slate-400" />
+                        <div className="p-2 mr-4 bg-white border rounded-lg">
+                          <FileText className="w-8 h-8 text-slate-400" />
                         </div>
                         <div>
                           <h3 className="font-medium ">Pitch Deck</h3>
@@ -2418,7 +1919,7 @@ export default function CompanyDetailsPage({
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                <Download className="mr-2 h-4 w-4" />
+                                <Download className="w-4 h-4 mr-2" />
                                 Download
                               </a>
                             </Button>
@@ -2433,13 +1934,13 @@ export default function CompanyDetailsPage({
 
                   {!company?.fundingDocuments && !company?.pitchDeck && (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="bg-slate-50 p-6 rounded-full mb-4">
-                        <FileText className="h-16 w-16 text-slate-300" />
+                      <div className="p-6 mb-4 rounded-full bg-slate-50">
+                        <FileText className="w-16 h-16 text-slate-300" />
                       </div>
-                      <h3 className="font-medium text-xl mb-2 ">
+                      <h3 className="mb-2 text-xl font-medium ">
                         No documents available
                       </h3>
-                      <p className="text-slate-500 max-w-md">
+                      <p className="max-w-md text-slate-500">
                         This company hasn't uploaded any documents yet.
                       </p>
                     </div>
@@ -2447,12 +1948,12 @@ export default function CompanyDetailsPage({
                 </div>
               </CardContent>
               {user?.id && company?.userId && user.id === company.userId && (
-                <CardFooter className="bg-slate-50 border-t p-6">
+                <CardFooter className="p-6 border-t bg-slate-50">
                   <div className="w-full">
-                    <h3 className="font-medium  mb-2">
+                    <h3 className="mb-2 font-medium">
                       Upload Company Documents
                     </h3>
-                    <p className="text-sm text-slate-500 mb-4">
+                    <p className="mb-4 text-sm text-slate-500">
                       Share important documents with potential investors and
                       partners.
                     </p>
@@ -2467,29 +1968,29 @@ export default function CompanyDetailsPage({
 
           {/* Contact Tab */}
           <TabsContent value="contact" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-8">
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              <div className="space-y-8 lg:col-span-2">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">
                       Contact Information
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                       <div className="space-y-6">
                         <h3 className="font-semibold ">Company Contact</h3>
                         <div className="space-y-4">
                           <div className="flex items-start">
-                            <div className="bg-slate-50 p-2 rounded-lg mr-4">
-                              <Mail className="h-5 w-5 text-slate-400" />
+                            <div className="p-2 mr-4 rounded-lg bg-slate-50">
+                              <Mail className="w-5 h-5 text-slate-400" />
                             </div>
                             <div>
                               <p className="text-sm text-slate-500">Email</p>
                               {company?.email ? (
                                 <a
                                   href={`mailto:${company.email}`}
-                                  className="font-medium  hover:text-slate-700"
+                                  className="font-medium hover:text-slate-700"
                                 >
                                   {company.email}
                                 </a>
@@ -2502,14 +2003,14 @@ export default function CompanyDetailsPage({
                           </div>
                           {company?.phone ? (
                             <div className="flex items-start">
-                              <div className="bg-slate-50 p-2 rounded-lg mr-4">
-                                <Phone className="h-5 w-5 text-slate-400" />
+                              <div className="p-2 mr-4 rounded-lg bg-slate-50">
+                                <Phone className="w-5 h-5 text-slate-400" />
                               </div>
                               <div>
                                 <p className="text-sm text-slate-500">Phone</p>
                                 <a
                                   href={`tel:${company.phone}`}
-                                  className="font-medium  hover:text-slate-700"
+                                  className="font-medium hover:text-slate-700"
                                 >
                                   {company.phone}
                                 </a>
@@ -2519,8 +2020,8 @@ export default function CompanyDetailsPage({
 
                           {company?.address && company.address.trim() !== "" ? (
                             <div className="flex items-start">
-                              <div className="bg-slate-50 p-2 rounded-lg mr-4">
-                                <MapPin className="h-5 w-5 text-slate-400" />
+                              <div className="p-2 mr-4 rounded-lg bg-slate-50">
+                                <MapPin className="w-5 h-5 text-slate-400" />
                               </div>
                               <div>
                                 <p className="text-sm text-slate-500">
@@ -2535,8 +2036,8 @@ export default function CompanyDetailsPage({
 
                           {company?.website && company.website.trim() !== "" ? (
                             <div className="flex items-start">
-                              <div className="bg-slate-50 p-2 rounded-lg mr-4">
-                                <Globe className="h-5 w-5 text-slate-400" />
+                              <div className="p-2 mr-4 rounded-lg bg-slate-50">
+                                <Globe className="w-5 h-5 text-slate-400" />
                               </div>
                               <div>
                                 <p className="text-sm text-slate-500">
@@ -2546,10 +2047,10 @@ export default function CompanyDetailsPage({
                                   href={company.website}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="font-medium  hover:text-slate-700 flex items-center"
+                                  className="flex items-center font-medium hover:text-slate-700"
                                 >
                                   {company.website.replace(/^https?:\/\//, "")}
-                                  <ExternalLink className="ml-1 h-3 w-3" />
+                                  <ExternalLink className="w-3 h-3 ml-1" />
                                 </a>
                               </div>
                             </div>
@@ -2572,27 +2073,27 @@ export default function CompanyDetailsPage({
                               )
                               .map((social, index) => (
                                 <div key={index} className="flex items-start">
-                                  <div className="bg-slate-50 p-2 rounded-lg mr-4">
-                                    <Globe className="h-5 w-5 text-slate-400" />
+                                  <div className="p-2 mr-4 rounded-lg bg-slate-50">
+                                    <Globe className="w-5 h-5 text-slate-400" />
                                   </div>
                                   <div>
-                                    <p className="text-sm text-slate-500 capitalize">
+                                    <p className="text-sm capitalize text-slate-500">
                                       {social.name}
                                     </p>
                                     <a
                                       href={social.link}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="font-medium  hover:text-slate-700 flex items-center"
+                                      className="flex items-center font-medium hover:text-slate-700"
                                     >
                                       {social.link.replace(/^https?:\/\//, "")}
-                                      <ExternalLink className="ml-1 h-3 w-3" />
+                                      <ExternalLink className="w-3 h-3 ml-1" />
                                     </a>
                                   </div>
                                 </div>
                               ))
                           ) : (
-                            <p className="text-slate-500 italic">
+                            <p className="italic text-slate-500">
                               No social media links provided.
                             </p>
                           )}
@@ -2602,8 +2103,8 @@ export default function CompanyDetailsPage({
                   </CardContent>
                 </Card>
 
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">Contact Form</CardTitle>
                     <CardDescription>
                       Send a message to this company
@@ -2611,7 +2112,7 @@ export default function CompanyDetailsPage({
                   </CardHeader>
                   <CardContent className="p-6">
                     <form className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                           <label
                             htmlFor="name"
@@ -2622,7 +2123,7 @@ export default function CompanyDetailsPage({
                           <input
                             id="name"
                             type="text"
-                            className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400"
+                            className="w-full p-2 border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
                             placeholder="Enter your name"
                           />
                         </div>
@@ -2636,7 +2137,7 @@ export default function CompanyDetailsPage({
                           <input
                             id="email"
                             type="email"
-                            className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400"
+                            className="w-full p-2 border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
                             placeholder="Enter your email"
                           />
                         </div>
@@ -2651,7 +2152,7 @@ export default function CompanyDetailsPage({
                         <input
                           id="subject"
                           type="text"
-                          className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400"
+                          className="w-full p-2 border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
                           placeholder="Enter message subject"
                         />
                       </div>
@@ -2665,38 +2166,38 @@ export default function CompanyDetailsPage({
                         <textarea
                           id="message"
                           rows={5}
-                          className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400"
+                          className="w-full p-2 border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
                           placeholder="Enter your message"
                         ></textarea>
                       </div>
                     </form>
                   </CardContent>
-                  <CardFooter className="bg-slate-50 border-t p-6">
+                  <CardFooter className="p-6 border-t bg-slate-50">
                     <Button className="w-full md:w-auto">Send Message</Button>
                   </CardFooter>
                 </Card>
               </div>
 
               <div>
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">Location</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
                     {company?.location?.trim() ? (
                       <div className="space-y-4">
-                        <div className="aspect-video bg-slate-100 rounded-lg overflow-hidden relative">
+                        <div className="relative overflow-hidden rounded-lg aspect-video bg-slate-100">
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <MapPin className="h-8 w-8 text-slate-400" />
+                            <MapPin className="w-8 h-8 text-slate-400" />
                           </div>
-                          <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 p-2 text-center text-sm">
+                          <div className="absolute bottom-0 left-0 right-0 p-2 text-sm text-center bg-white bg-opacity-90">
                             {company.location}
                           </div>
                         </div>
 
                         {company?.address?.trim() && (
                           <div>
-                            <h3 className="text-sm font-medium text-slate-500 mb-1">
+                            <h3 className="mb-1 text-sm font-medium text-slate-500">
                               Address
                             </h3>
                             <p className="">{company.address}</p>
@@ -2715,17 +2216,17 @@ export default function CompanyDetailsPage({
                             )
                           }
                         >
-                          <MapPin className="mr-2 h-4 w-4" />
+                          <MapPin className="w-4 h-4 mr-2" />
                           View on Google Maps
                         </Button>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center py-8 text-center">
-                        <MapPin className="h-12 w-12 text-slate-300 mb-4" />
-                        <h3 className="font-medium text-lg mb-2 ">
+                        <MapPin className="w-12 h-12 mb-4 text-slate-300" />
+                        <h3 className="mb-2 text-lg font-medium ">
                           No location specified
                         </h3>
-                        <p className="text-slate-500 max-w-md">
+                        <p className="max-w-md text-slate-500">
                           This company hasn't provided location information.
                         </p>
                       </div>
@@ -2738,8 +2239,8 @@ export default function CompanyDetailsPage({
 
           {/* Funding Rounds Tab */}
           <TabsContent value="funding" className="space-y-8">
-            <Card className="dark:border  shadow-md overflow-hidden">
-              <CardHeader className="bg-accent border-b">
+            <Card className="overflow-hidden shadow-md dark:border">
+              <CardHeader className="border-b bg-accent">
                 <CardTitle className="text-xl">Funding Rounds</CardTitle>
                 <CardDescription>
                   Investment history and funding details
@@ -2748,8 +2249,8 @@ export default function CompanyDetailsPage({
               <CardContent className="p-6">
                 {loading ? (
                   <div className="flex justify-center py-12">
-                    <div className="animate-pulse text-center">
-                      <div className="h-8 w-32 bg-slate-200 rounded-md mx-auto mb-4"></div>
+                    <div className="text-center animate-pulse">
+                      <div className="w-32 h-8 mx-auto mb-4 rounded-md bg-slate-200"></div>
                       <p className="text-slate-500">Loading funding data...</p>
                     </div>
                   </div>
@@ -2757,25 +2258,25 @@ export default function CompanyDetailsPage({
                   <RoundsTable rounds={rounds} loading={loading} />
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="bg-slate-50 p-6 rounded-full mb-4">
-                      <FileText className="h-16 w-16 text-slate-300" />
+                    <div className="p-6 mb-4 rounded-full bg-slate-50">
+                      <FileText className="w-16 h-16 text-slate-300" />
                     </div>
-                    <h3 className="font-medium text-xl mb-2 ">
+                    <h3 className="mb-2 text-xl font-medium ">
                       No funding rounds
                     </h3>
-                    <p className="text-slate-500 max-w-md">
+                    <p className="max-w-md text-slate-500">
                       This company hasn't recorded any funding rounds yet.
                     </p>
                   </div>
                 )}
               </CardContent>
               {user?.id === company?.userId && (
-                <CardFooter className="bg-slate-50 border-t p-6">
+                <CardFooter className="p-6 border-t bg-slate-50">
                   <div className="w-full">
-                    <h3 className="font-medium  mb-2">
+                    <h3 className="mb-2 font-medium">
                       Record a New Funding Round
                     </h3>
-                    <p className="text-sm text-slate-500 mb-4">
+                    <p className="mb-4 text-sm text-slate-500">
                       Keep track of your investment history and showcase your
                       growth to potential investors.
                     </p>
@@ -2787,16 +2288,16 @@ export default function CompanyDetailsPage({
               )}
             </Card>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
               <div className="lg:col-span-2">
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">Funding Summary</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
                     <div className="space-y-6">
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">
                           Current Funding Status
                         </h3>
                         <div className="flex items-center">
@@ -2813,7 +2314,7 @@ export default function CompanyDetailsPage({
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">
                           Funding Progress
                         </h3>
                         {company?.amountRaised && company?.fundingNeeded ? (
@@ -2832,7 +2333,7 @@ export default function CompanyDetailsPage({
                               value={calculateFundingProgress()}
                               className="h-2"
                             />
-                            <p className="text-sm text-slate-500 mt-2">
+                            <p className="mt-2 text-sm text-slate-500">
                               {company.amountRaised < company.fundingNeeded
                                 ? `Still seeking ${formatCurrency(
                                     company.fundingNeeded - company.amountRaised
@@ -2841,42 +2342,16 @@ export default function CompanyDetailsPage({
                             </p>
                           </div>
                         ) : (
-                          <p className="text-slate-500 italic">
+                          <p className="italic text-slate-500">
                             No funding progress information available
                           </p>
                         )}
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">
                           External Funding Sources
                         </h3>
-                        {/* {company?.externalFunding?.length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {company.externalFunding.map((source, index) => (
-                              <Badge
-                                key={index}
-                                variant="outline"
-                                className="bg-slate-50 text-slate-700 px-3 py-1"
-                              >
-                                {source}
-                              </Badge>
-                            ))}
-                            {company.externalFunding.includes("Other") &&
-                              company.otherExternalFunding && (
-                                <Badge
-                                  variant="outline"
-                                  className="bg-slate-50 text-slate-700 px-3 py-1"
-                                >
-                                  {company.otherExternalFunding}
-                                </Badge>
-                              )}
-                          </div>
-                        ) : (
-                          <p className="text-slate-500 italic">
-                            No external funding sources specified
-                          </p>
-                        )} */}
                       </div>
                     </div>
                   </CardContent>
@@ -2884,8 +2359,8 @@ export default function CompanyDetailsPage({
               </div>
 
               <div>
-                <Card className="dark:border  shadow-md overflow-hidden">
-                  <CardHeader className="bg-accent border-b">
+                <Card className="overflow-hidden shadow-md dark:border">
+                  <CardHeader className="border-b bg-accent">
                     <CardTitle className="text-xl">
                       Investment Opportunity
                     </CardTitle>
@@ -2893,7 +2368,7 @@ export default function CompanyDetailsPage({
                   <CardContent className="p-6">
                     <div className="space-y-6">
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">
                           Funding Needed
                         </h3>
                         <p className="font-medium ">
@@ -2902,7 +2377,7 @@ export default function CompanyDetailsPage({
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">
                           Business Stage
                         </h3>
                         <Badge
@@ -2919,7 +2394,7 @@ export default function CompanyDetailsPage({
                       <Separator className="my-2" />
 
                       <div>
-                        <h3 className="text-sm font-medium text-slate-500 mb-2">
+                        <h3 className="mb-2 text-sm font-medium text-slate-500">
                           Interested in investing?
                         </h3>
                         <Link href="/Investor-interest-form" passHref>
@@ -2935,7 +2410,7 @@ export default function CompanyDetailsPage({
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              <FileText className="mr-2 h-4 w-4" />
+                              <FileText className="w-4 h-4 mr-2" />
                               View Pitch Deck
                             </a>
                           </Button>
