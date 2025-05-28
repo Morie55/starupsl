@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-// Define Event type
+// Define the Event type
 export type Event = {
   id: string;
   title: string;
@@ -18,9 +18,24 @@ export type Event = {
   organizer?: string;
 };
 
-// In-memory storage for demo purposes
-// In a real app, you would use a database
-let events: Event[] = [
+// Zod schema for event form validation
+const eventSchema = z.object({
+  title: z.string().min(3, { message: "Title must be at least 3 characters." }),
+  description: z
+    .string()
+    .min(10, { message: "Description must be at least 10 characters." }),
+  location: z
+    .string()
+    .min(3, { message: "Location must be at least 3 characters." }),
+  startDateTime: z.string(),
+  endDateTime: z.string(),
+  imageUrl: z.string(),
+  category: z.string(),
+  attendeesLimit: z.number(),
+});
+
+// In-memory storage for events (replace with a database in production)
+const events: Event[] = [
   {
     id: "1",
     title: "Annual Tech Conference",
@@ -62,168 +77,189 @@ let events: Event[] = [
   },
 ];
 
-// Event validation schema
-const eventSchema = z.object({
-  title: z.string().min(3, { message: "Title must be at least 3 characters." }),
-  description: z
-    .string()
-    .min(10, { message: "Description must be at least 10 characters." }),
-  type: z.enum(["In-person", "Virtual", "Hybrid"]),
-  date: z.string().min(1, { message: "Date is required." }),
-  time: z.string().min(1, { message: "Time is required." }),
-  location: z
-    .string()
-    .min(3, { message: "Location must be at least 3 characters." }),
-  attendees: z.coerce
-    .number()
-    .min(1, { message: "At least 1 attendee is required." }),
-  image: z.string().optional(),
-  organizer: z.string().optional(),
-});
+// Function to simulate a delay
+const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-// Server action to get all events
+// CRUD Operations
 export async function getEvents() {
-  // In a real app, you would fetch from a database
-  // Example with Prisma: return await prisma.event.findMany()
-  // Example with Supabase: return await supabase.from('events').select('*')
-
-  return events;
+  try {
+    await delay(100); // Simulate network delay
+    return events;
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    return [];
+  }
 }
 
-// Server action to get a single event by ID
 export async function getEvent(id: string) {
-  // In a real app, you would fetch from a database
-  // Example with Prisma: return await prisma.event.findUnique({ where: { id } })
-  // Example with Supabase: return await supabase.from('events').select('*').eq('id', id).single()
-
-  return events.find((event) => event.id === id) || null;
+  try {
+    await delay(100); // Simulate network delay
+    const event = events.find((event) => event.id === id);
+    if (!event) {
+      throw new Error(`Event with id ${id} not found`);
+    }
+    return event;
+  } catch (error: any) {
+    console.error("Error fetching event:", error);
+    return undefined;
+  }
 }
 
-// Server action to create a new event
-export async function createEvent(formData: FormData) {
-  // Parse and validate form data
-  const rawData = Object.fromEntries(formData.entries());
+export async function createEvent(prevState: any, formData: FormData) {
+  const validatedFields = eventSchema.safeParse({
+    title: formData.get("title"),
+    description: formData.get("description"),
+    location: formData.get("location"),
+    startDateTime: formData.get("startDateTime"),
+    endDateTime: formData.get("endDateTime"),
+    imageUrl: formData.get("imageUrl"),
+    category: formData.get("category"),
+    attendeesLimit: Number(formData.get("attendeesLimit")),
+  });
 
-  // Convert date object to string if needed
-  if (rawData.date instanceof Date) {
-    rawData.date = rawData.date.toISOString().split("T")[0];
-  }
-
-  try {
-    const validatedData = eventSchema.parse(rawData);
-
-    // Generate a new ID (in a real app, your database would handle this)
-    const newId = (events.length + 1).toString();
-
-    // Create the new event
-    const newEvent: Event = {
-      id: newId,
-      ...validatedData,
-      organizer: validatedData.organizer || "Event Organizer",
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Missing Fields. Failed to Create Event.",
     };
-
-    // In a real app, you would save to a database
-    // Example with Prisma: await prisma.event.create({ data: newEvent })
-    // Example with Supabase: await supabase.from('events').insert(newEvent)
-
-    // For demo, add to our in-memory array
-    events.push(newEvent);
-
-    // Revalidate the events page to show the new event
-    revalidatePath("/events");
-
-    // Redirect to the events page
-    redirect("/events");
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      // Return validation errors
-      return { success: false, errors: error.errors };
-    }
-
-    // Return generic error
-    return { success: false, errors: [{ message: "Failed to create event" }] };
   }
-}
 
-// Server action to update an existing event
-export async function updateEvent(id: string, formData: FormData) {
-  // Parse and validate form data
-  const rawData = Object.fromEntries(formData.entries());
-
-  // Convert date object to string if needed
-  if (rawData.date instanceof Date) {
-    rawData.date = rawData.date.toISOString().split("T")[0];
-  }
+  const {
+    title,
+    description,
+    location,
+    startDateTime,
+    endDateTime,
+    imageUrl,
+    category,
+    attendeesLimit,
+  } = validatedFields.data;
+  const id = String(events.length + 1); // Simple ID generation
+  const newEvent: Event = {
+    id,
+    title,
+    description,
+    location,
+    startDateTime,
+    endDateTime,
+    imageUrl,
+    category,
+    attendeesLimit,
+    date: new Date(startDateTime).toLocaleDateString(),
+    time: new Date(startDateTime).toLocaleTimeString(),
+  };
 
   try {
-    const validatedData = eventSchema.parse(rawData);
-
-    // In a real app, you would update in a database
-    // Example with Prisma: await prisma.event.update({ where: { id }, data: validatedData })
-    // Example with Supabase: await supabase.from('events').update(validatedData).eq('id', id)
-
-    // For demo, update our in-memory array
-    const eventIndex = events.findIndex((event) => event.id === id);
-    if (eventIndex !== -1) {
-      events[eventIndex] = { ...events[eventIndex], ...validatedData };
-    } else {
-      return { success: false, errors: [{ message: "Event not found" }] };
-    }
-
-    // Revalidate the events pages
-    revalidatePath("/events");
-    revalidatePath(`/events/${id}`);
-
-    // Redirect to the event detail page
-    redirect(`/events/${id}`);
+    await delay(500); // Simulate database delay
+    events.push(newEvent);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      // Return validation errors
-      return { success: false, errors: error.errors };
-    }
-
-    // Return generic error
-    return { success: false, errors: [{ message: "Failed to update event" }] };
+    console.error("Error creating event:", error);
+    return { message: "Failed to create event" };
   }
+
+  revalidatePath("/events");
+  redirect("/events");
 }
 
-// Server action to delete an event
+export async function updateEvent(
+  id: string,
+  prevState: any,
+  formData: FormData
+) {
+  const validatedFields = eventSchema.safeParse({
+    title: formData.get("title"),
+    description: formData.get("description"),
+    location: formData.get("location"),
+    startDateTime: formData.get("startDateTime"),
+    endDateTime: formData.get("endDateTime"),
+    imageUrl: formData.get("imageUrl"),
+    category: formData.get("category"),
+    attendeesLimit: Number(formData.get("attendeesLimit")),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Missing Fields. Failed to Update Event.",
+    };
+  }
+
+  const {
+    title,
+    description,
+    location,
+    startDateTime,
+    endDateTime,
+    imageUrl,
+    category,
+    attendeesLimit,
+  } = validatedFields.data;
+
+  try {
+    await delay(500); // Simulate database delay
+    const eventIndex = events.findIndex((event) => event.id === id);
+    if (eventIndex === -1) {
+      return { message: `Event with id ${id} not found` };
+    }
+
+    events[eventIndex] = {
+      id,
+      title,
+      description,
+      location,
+      startDateTime,
+      endDateTime,
+      imageUrl,
+      category,
+      attendeesLimit,
+      date: new Date(startDateTime).toLocaleDateString(),
+      time: new Date(startDateTime).toLocaleTimeString(),
+    };
+  } catch (error) {
+    console.error("Error updating event:", error);
+    return { message: "Failed to update event" };
+  }
+
+  revalidatePath("/events");
+  redirect("/events");
+}
+
 export async function deleteEvent(id: string) {
   try {
-    // In a real app, you would delete from a database
-    // Example with Prisma: await prisma.event.delete({ where: { id } })
-    // Example with Supabase: await supabase.from('events').delete().eq('id', id)
+    await delay(500); // Simulate database delay
+    const eventIndex = events.findIndex((event) => event.id === id);
+    if (eventIndex === -1) {
+      return { message: `Event with id ${id} not found` };
+    }
 
-    // For demo, remove from our in-memory array
-    events = events.filter((event) => event.id !== id);
-
-    // Revalidate the events page
-    revalidatePath("/events");
-
-    // Return success
-    return { success: true };
+    events.splice(eventIndex, 1);
   } catch (error) {
-    // Return error
-    return { success: false, error: "Failed to delete event" };
+    console.error("Error deleting event:", error);
+    return { message: "Failed to delete event" };
   }
+
+  revalidatePath("/events");
 }
 
-// Server action to register for an event
-export async function registerForEvent(eventId: string, formData: FormData) {
-  // In a real app, you would save registration to a database
-  // and handle user authentication
-
+// Event Registration
+export async function registerForEvent(eventId: string) {
   try {
-    // For demo, just log the registration
-    console.log(
-      `Registered for event ${eventId}`,
-      Object.fromEntries(formData.entries())
-    );
+    await delay(300); // Simulate processing time
+    const eventIndex = events.findIndex((event) => event.id === eventId);
+    if (eventIndex === -1) {
+      throw new Error(`Event with id ${eventId} not found`);
+    }
 
-    // Return success
+    // Increment the number of attendees
+    events[eventIndex] = {
+      ...events[eventIndex],
+      attendeesLimit: events[eventIndex].attendeesLimit + 1,
+    };
+
+    console.log(`User registered for event: ${eventId}`);
     return { success: true, message: "Registration successful" };
-  } catch (error) {
-    // Return error
-    return { success: false, error: "Failed to register for event" };
+  } catch (error: any) {
+    console.error("Error registering for event:", error);
+    return { success: false, message: error.message || "Registration failed" };
   }
 }
