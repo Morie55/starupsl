@@ -629,23 +629,23 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-700" />
+        <Loader2 className="w-8 h-8 animate-spin text-slate-700" />
         <span className="ml-2 text-lg">Loading company data...</span>
       </div>
     );
   }
 
   return (
-    <div className="bg-white min-h-screen">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="min-h-screen bg-white">
+      <div className="container px-4 py-8 mx-auto max-w-7xl dark:bg-slate-900">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6 dark:text-white">
             <Link
               href={`/companies/${company._id}`}
-              className="inline-flex items-center text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              className="inline-flex items-center text-sm font-medium transition-colors text-slate-600 hover:text-slate-900 dark:text-white dark:hover:text-slate-300"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <ArrowLeft className="w-4 h-4 mr-2 dark:text-white" />
               Back to Company
             </Link>
 
@@ -657,7 +657,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                     size="sm"
                     className="text-red-600 border-red-200 hover:bg-red-50"
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
+                    <Trash2 className="w-4 h-4 mr-2" />
                     Delete Company
                   </Button>
                 </AlertDialogTrigger>
@@ -679,7 +679,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                     >
                       {isSubmitting ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Deleting...
                         </>
                       ) : (
@@ -692,7 +692,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
             </div>
           </div>
 
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+          <h1 className="mb-2 text-3xl font-bold text-slate-900">
             Edit Company
           </h1>
           <p className="text-slate-600">
@@ -705,7 +705,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
             {/* Tabs Navigation */}
             <div className="overflow-x-auto border-b">
               <Tabs defaultValue="basic">
-                <TabsList className="bg-transparent h-12 w-full justify-start rounded-none gap-2">
+                <TabsList className="justify-start w-full h-12 gap-2 bg-transparent rounded-none">
                   <TabsTrigger
                     value="basic"
                     onClick={() => setActiveTab("basic")}
@@ -766,22 +766,24 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
             {/* Basic Information Tab */}
             {activeTab === "basic" && (
               <div className="space-y-8">
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
-                    <CardTitle className="text-xl">Company Identity</CardTitle>
-                    <CardDescription>
+                <Card className="overflow-hidden shadow-md border-1">
+                  <CardHeader className="border-b dark:text-white dark:bg-slate-800">
+                    <CardTitle className="text-xl text-slate-600 dark:text-slate-400">
+                      Company Identity
+                    </CardTitle>
+                    <CardDescription className="text-slate-600 dark:text-slate-400">
                       Basic information about your company
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
-                    <div className="flex flex-col md:flex-row gap-8">
+                    <div className="flex flex-col gap-8 md:flex-row">
                       {/* Logo Upload */}
                       <div className="w-full md:w-1/3">
-                        <FormLabel className="text-base font-medium text-slate-900 mb-2 block">
+                        <FormLabel className="block mb-2 text-base font-medium text-slate-900 dark:text-slate-500">
                           Company Logo
                         </FormLabel>
                         <div className="flex flex-col items-center justify-center">
-                          <div className="relative h-40 w-40 rounded-xl overflow-hidden border bg-white shadow-sm flex items-center justify-center mb-4">
+                          <div className="relative flex items-center justify-center w-40 h-40 mb-4 overflow-hidden bg-white border shadow-sm rounded-xl">
                             {logoPreview ? (
                               <Image
                                 src={logoPreview || "/placeholder.svg"}
@@ -795,15 +797,15 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                                 }}
                               />
                             ) : (
-                              <Building2 className="h-20 w-20 text-slate-300" />
+                              <Building2 className="w-20 h-20 text-slate-300" />
                             )}
                           </div>
                           <div className="flex flex-col items-center">
                             <label
                               htmlFor="logo-upload"
-                              className="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+                              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white transition-colors rounded-md shadow cursor-pointer h-9 bg-slate-900 hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                             >
-                              <Upload className="mr-2 h-4 w-4" />
+                              <Upload className="w-4 h-4 mr-2" />
                               Upload Logo
                             </label>
                             <input
@@ -813,7 +815,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                               className="hidden"
                               onChange={handleLogoChange}
                             />
-                            <p className="text-xs text-slate-500 mt-2">
+                            <p className="mt-2 text-xs text-slate-500">
                               Recommended: 400x400px, max 2MB
                             </p>
                           </div>
@@ -821,13 +823,13 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                       </div>
 
                       {/* Company Name and Basic Info */}
-                      <div className="w-full md:w-2/3 space-y-4">
+                      <div className="w-full space-y-4 md:w-2/3">
                         <FormField
                           control={form.control}
                           name="name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-base font-medium text-slate-900">
+                              <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                 Company Name*
                               </FormLabel>
                               <FormControl>
@@ -842,13 +844,13 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                           )}
                         />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                           <FormField
                             control={form.control}
                             name="sector"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-base font-medium text-slate-900">
+                                <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                   Business Sector*
                                 </FormLabel>
                                 <Select
@@ -879,7 +881,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                               name="otherSector"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-base font-medium text-slate-900">
+                                  <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                     Specify Other Sector
                                   </FormLabel>
                                   <FormControl>
@@ -900,7 +902,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                             name="type"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-base font-medium text-slate-900">
+                                <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                   Company Type
                                 </FormLabel>
                                 <Select
@@ -930,7 +932,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                             name="stage"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-base font-medium text-slate-900">
+                                <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                   Business Stage
                                 </FormLabel>
                                 <Select
@@ -960,7 +962,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                             name="foundedAt"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-base font-medium text-slate-900">
+                                <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                   Founded Date
                                 </FormLabel>
                                 <FormControl>
@@ -980,7 +982,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                             name="registrationNumber"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-base font-medium text-slate-900">
+                                <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                   Registration Number
                                 </FormLabel>
                                 <FormControl>
@@ -1006,7 +1008,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="missionStatement"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Mission Statement
                             </FormLabel>
                             <FormControl>
@@ -1030,7 +1032,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Company Description
                             </FormLabel>
                             <FormControl>
@@ -1053,8 +1055,8 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="overflow-hidden border-0 shadow-md">
+                  <CardHeader className="border-b bg-gradient-to-r dark:from-slate-800 dark:to-slate-900">
                     <CardTitle className="text-xl">
                       Founder Information
                     </CardTitle>
@@ -1063,13 +1065,13 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <FormField
                         control={form.control}
                         name="founderName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Founder Name
                             </FormLabel>
                             <FormControl>
@@ -1089,7 +1091,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="founderGender"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Founder Gender
                             </FormLabel>
                             <Select
@@ -1122,7 +1124,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="founderDob"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Founder Date of Birth
                             </FormLabel>
                             <FormControl>
@@ -1142,7 +1144,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="founderEducation"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Founder Education
                             </FormLabel>
                             <Select
@@ -1182,12 +1184,12 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <FormField
                         control={form.control}
                         name="isYouthLed"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormItem className="flex flex-row items-start p-4 space-x-3 space-y-0 border rounded-md">
                             <FormControl>
                               <Checkbox
                                 checked={field.value}
@@ -1195,7 +1197,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                               />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                              <FormLabel className="text-base font-medium text-slate-900">
+                              <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                 Youth-led Business
                               </FormLabel>
                               <FormDescription>
@@ -1211,7 +1213,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         control={form.control}
                         name="isWomanLed"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormItem className="flex flex-row items-start p-4 space-x-3 space-y-0 border rounded-md">
                             <FormControl>
                               <Checkbox
                                 checked={field.value}
@@ -1219,10 +1221,10 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                               />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                              <FormLabel className="text-base font-medium text-slate-900">
+                              <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                 Woman-led Business
                               </FormLabel>
-                              <FormDescription>
+                              <FormDescription className="text-sm text-slate-600 dark:text-slate-400">
                                 The business is primarily led by women
                                 entrepreneurs
                               </FormDescription>
@@ -1239,8 +1241,8 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
             {/* Business Details Tab */}
             {activeTab === "business" && (
               <div className="space-y-8">
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="overflow-hidden border-0 shadow-md">
+                  <CardHeader className="border-b bg-gradient-to-r dark:from-slate-800 dark:to-slate-900">
                     <CardTitle className="text-xl">
                       Business Model & Operations
                     </CardTitle>
@@ -1249,13 +1251,13 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <FormField
                         control={form.control}
                         name="businessModel"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Business Model
                             </FormLabel>
                             <Select
@@ -1286,7 +1288,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                           name="otherBusinessModel"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-base font-medium text-slate-900">
+                              <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                 Specify Other Business Model
                               </FormLabel>
                               <FormControl>
@@ -1307,7 +1309,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="employeesRange"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Number of Employees
                             </FormLabel>
                             <Select
@@ -1337,7 +1339,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="location"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Primary Location
                             </FormLabel>
                             <FormControl>
@@ -1356,14 +1358,14 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                     <Separator className="my-6" />
 
                     <div className="space-y-4"></div>
-                    <h3 className="text-base font-medium text-slate-900">
+                    <h3 className="text-base font-medium text-slate-900 dark:text-slate-500">
                       Tax Compliance
                     </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
                       {taxComplianceOptions.map((option) => (
                         <div
                           key={option}
-                          className="flex items-center space-x-2 rounded-md border p-3"
+                          className="flex items-center p-3 space-x-2 border rounded-md"
                         >
                           <Checkbox
                             id={`tax-${option}`}
@@ -1386,13 +1388,13 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                       ))}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <div className="grid grid-cols-1 gap-4 mt-6 md:grid-cols-2">
                       <FormField
                         control={form.control}
                         name="sectorLicenses"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Sector-specific Licenses
                             </FormLabel>
                             <FormControl>
@@ -1415,7 +1417,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         control={form.control}
                         name="hasIntellectualProperty"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormItem className="flex flex-row items-start p-4 space-x-3 space-y-0 border rounded-md">
                             <FormControl>
                               <Checkbox
                                 checked={field.value}
@@ -1423,10 +1425,10 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                               />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                              <FormLabel className="text-base font-medium text-slate-900">
+                              <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                 Intellectual Property
                               </FormLabel>
-                              <FormDescription>
+                              <FormDescription className="text-sm text-slate-600 dark:text-slate-400">
                                 The business has patents, trademarks, or other
                                 intellectual property
                               </FormDescription>
@@ -1438,25 +1440,25 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
-                    <CardTitle className="text-xl">
+                <Card className="overflow-hidden border-0 shadow-md">
+                  <CardHeader className="border-b bg-gradient-to-r dark:from-slate-800 dark:to-slate-900 dark:text-slate-500">
+                    <CardTitle className="text-xl dark:text-slate-500">
                       Business Challenges & Expansion
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="dark:text-slate-400">
                       Current challenges and future plans
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
                     <div className="space-y-4">
-                      <h3 className="text-base font-medium text-slate-900">
+                      <h3 className="text-base font-medium text-slate-900 dark:text-slate-500">
                         Business Challenges
                       </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
                         {businessChallengesOptions.map((option) => (
                           <div
                             key={option}
-                            className="flex items-center space-x-2 rounded-md border p-3"
+                            className="flex items-center p-3 space-x-2 border rounded-md"
                           >
                             <Checkbox
                               id={`challenge-${option}`}
@@ -1485,7 +1487,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                           name="otherBusinessChallenges"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-base font-medium text-slate-900">
+                              <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                 Specify Other Challenges
                               </FormLabel>
                               <FormControl>
@@ -1506,7 +1508,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="supportNeeded"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Support Needed
                             </FormLabel>
                             <FormControl>
@@ -1516,7 +1518,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                                 className="border-slate-300 min-h-[100px]"
                               />
                             </FormControl>
-                            <FormDescription>
+                            <FormDescription className="text-sm text-slate-600 dark:text-slate-400">
                               Describe what kind of support would help your
                               business overcome its challenges
                             </FormDescription>
@@ -1533,7 +1535,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         control={form.control}
                         name="planningExpansion"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormItem className="flex flex-row items-start p-4 space-x-3 space-y-0 border rounded-md">
                             <FormControl>
                               <Checkbox
                                 checked={field.value}
@@ -1541,7 +1543,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                               />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                              <FormLabel className="text-base font-medium text-slate-900">
+                              <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                 Planning Expansion
                               </FormLabel>
                               <FormDescription>
@@ -1559,7 +1561,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                           name="expansionPlans"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-base font-medium text-slate-900">
+                              <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                 Expansion Plans
                               </FormLabel>
                               <FormControl>
@@ -1588,8 +1590,8 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
             {/* Financial Tab */}
             {activeTab === "financial" && (
               <div className="space-y-8">
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <Card className="overflow-hidden border-0 shadow-md">
+                  <CardHeader className="border-b bg-gradient-to-r dark:from-slate-800 dark:to-slate-900">
                     <CardTitle className="text-xl">
                       Financial Overview
                     </CardTitle>
@@ -1598,13 +1600,13 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <FormField
                         control={form.control}
                         name="fundingStatus"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Funding Status
                             </FormLabel>
                             <Select
@@ -1633,7 +1635,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         control={form.control}
                         name="hasBusinessBankAccount"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormItem className="flex flex-row items-start p-4 space-x-3 space-y-0 border rounded-md">
                             <FormControl>
                               <Checkbox
                                 checked={field.value}
@@ -1641,10 +1643,10 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                               />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                              <FormLabel className="text-base font-medium text-slate-900">
+                              <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                 Business Bank Account
                               </FormLabel>
-                              <FormDescription>
+                              <FormDescription className="text-sm text-slate-600 dark:text-slate-400">
                                 The business has a dedicated business bank
                                 account
                               </FormDescription>
@@ -1658,7 +1660,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="amountRaised"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Amount Raised (USD)
                             </FormLabel>
                             <FormControl>
@@ -1669,7 +1671,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                                 className="border-slate-300"
                               />
                             </FormControl>
-                            <FormDescription>
+                            <FormDescription className="text-sm text-slate-600 dark:text-slate-400">
                               Total funding raised to date
                             </FormDescription>
                             <FormMessage />
@@ -1682,7 +1684,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="fundingNeeded"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Funding Needed (USD)
                             </FormLabel>
                             <FormControl>
@@ -1693,7 +1695,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                                 className="border-slate-300"
                               />
                             </FormControl>
-                            <FormDescription>
+                            <FormDescription className="text-sm text-slate-600 dark:text-slate-400">
                               Additional funding required
                             </FormDescription>
                             <FormMessage />
@@ -1708,13 +1710,13 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                       <h3 className="text-base font-medium text-slate-900">
                         Annual Turnover
                       </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <FormField
                           control={form.control}
                           name="annualTurnoverBefore"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-medium text-slate-700">
+                              <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-500">
                                 Previous Year
                               </FormLabel>
                               <Select
@@ -1766,7 +1768,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                           name="annualTurnoverCurrent"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-medium text-slate-700">
+                              <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-500">
                                 Current Year (Est.)
                               </FormLabel>
                               <Select
@@ -1818,7 +1820,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                           name="annualTurnoverNext"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-medium text-slate-700">
+                              <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-500">
                                 Next Year (Proj.)
                               </FormLabel>
                               <Select
@@ -1871,18 +1873,21 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
 
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-base font-medium text-slate-900">
+                        <h3 className="text-base font-medium text-slate-900 dark:text-slate-500">
                           External Funding Sources
                         </h3>
-                        <Badge variant="outline" className="font-normal">
+                        <Badge
+                          variant="outline"
+                          className="font-normal dark:text-slate-500"
+                        >
                           Select all that apply
                         </Badge>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
                         {externalFundingOptions.map((option) => (
                           <div
                             key={option}
-                            className="flex items-center space-x-2 rounded-md border p-3"
+                            className="flex items-center p-3 space-x-2 border rounded-md"
                           >
                             <Checkbox
                               id={`funding-${option}`}
@@ -1911,7 +1916,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                           name="otherExternalFunding"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-base font-medium text-slate-900">
+                              <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                 Specify Other Funding Source
                               </FormLabel>
                               <FormControl>
@@ -1932,7 +1937,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="keepsFinancialRecords"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Financial Record Keeping
                             </FormLabel>
                             <Select
@@ -1960,36 +1965,36 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
-                    <CardTitle className="text-xl">
+                <Card className="overflow-hidden border-0 shadow-md">
+                  <CardHeader className="border-b bg-gradient-to-r dark:from-slate-800 dark:to-slate-900">
+                    <CardTitle className="text-xl dark:text-slate-500">
                       Financial Documents
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="dark:text-slate-500">
                       Upload financial documents and presentations
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <div className="space-y-4">
-                        <h3 className="text-base font-medium text-slate-900">
+                        <h3 className="text-base font-medium text-slate-900 dark:text-slate-500">
                           Funding Documents
                         </h3>
-                        <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 flex flex-col items-center justify-center text-center">
-                          <FileText className="h-10 w-10 text-slate-300 mb-4" />
-                          <h4 className="text-sm font-medium text-slate-900 mb-1">
+                        <div className="flex flex-col items-center justify-center p-6 text-center border-2 border-dashed rounded-lg border-slate-200">
+                          <FileText className="w-10 h-10 mb-4 text-slate-300" />
+                          <h4 className="mb-1 text-sm font-medium text-slate-900">
                             {company?.fundingDocuments
                               ? "Replace funding documents"
                               : "Upload funding documents"}
                           </h4>
-                          <p className="text-xs text-slate-500 mb-4">
+                          <p className="mb-4 text-xs text-slate-500 dark:text-slate-500">
                             PDF, DOC, or DOCX up to 10MB
                           </p>
                           <label
                             htmlFor="funding-docs-upload"
-                            className="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+                            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white transition-colors rounded-md shadow cursor-pointer h-9 bg-slate-900 hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:text-slate-500"
                           >
-                            <Upload className="mr-2 h-4 w-4" />
+                            <Upload className="w-4 h-4 mr-2" />
                             Choose File
                           </label>
                           <input
@@ -2000,10 +2005,10 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                             onChange={handleFundingDocChange}
                           />
                           {fundingDocName && (
-                            <div className="mt-4 flex items-center text-sm text-slate-500">
-                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                            <div className="flex items-center mt-4 text-sm text-slate-500">
+                              <Check className="w-4 h-4 mr-2 text-green-500" />
                               Current file:{" "}
-                              <span className="font-medium ml-1">
+                              <span className="ml-1 font-medium">
                                 {fundingDocName}
                               </span>
                             </div>
@@ -2012,24 +2017,24 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                       </div>
 
                       <div className="space-y-4">
-                        <h3 className="text-base font-medium text-slate-900">
+                        <h3 className="text-base font-medium text-slate-900 dark:text-slate-500">
                           Pitch Deck
                         </h3>
-                        <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 flex flex-col items-center justify-center text-center">
-                          <FileText className="h-10 w-10 text-slate-300 mb-4" />
-                          <h4 className="text-sm font-medium text-slate-900 mb-1">
+                        <div className="flex flex-col items-center justify-center p-6 text-center border-2 border-dashed rounded-lg border-slate-200">
+                          <FileText className="w-10 h-10 mb-4 text-slate-300" />
+                          <h4 className="mb-1 text-sm font-medium text-slate-900">
                             {company?.pitchDeck
                               ? "Replace pitch deck"
                               : "Upload pitch deck"}
                           </h4>
-                          <p className="text-xs text-slate-500 mb-4">
+                          <p className="mb-4 text-xs text-slate-500 dark:text-slate-500">
                             PDF, PPT, or PPTX up to 20MB
                           </p>
                           <label
                             htmlFor="pitch-deck-upload"
-                            className="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+                            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white transition-colors rounded-md shadow cursor-pointer h-9 bg-slate-900 hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:text-slate-500"
                           >
-                            <Upload className="mr-2 h-4 w-4" />
+                            <Upload className="w-4 h-4 mr-2" />
                             Choose File
                           </label>
                           <input
@@ -2040,10 +2045,10 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                             onChange={handlePitchDeckChange}
                           />
                           {pitchDeckName && (
-                            <div className="mt-4 flex items-center text-sm text-slate-500">
-                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                            <div className="flex items-center mt-4 text-sm text-slate-500 dark:text-slate-500">
+                              <Check className="w-4 h-4 mr-2 text-green-500" />
                               Current file:{" "}
-                              <span className="font-medium ml-1">
+                              <span className="ml-1 font-medium">
                                 {pitchDeckName}
                               </span>
                             </div>
@@ -2059,20 +2064,22 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
             {/* Innovation & Impact Tab */}
             {activeTab === "innovation" && (
               <div className="space-y-8">
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
-                    <CardTitle className="text-xl">Innovation</CardTitle>
-                    <CardDescription>
+                <Card className="overflow-hidden border-0 shadow-md">
+                  <CardHeader className="border-b bg-gradient-to-r dark:from-slate-800 dark:to-slate-900">
+                    <CardTitle className="text-xl dark:text-slate-500">
+                      Innovation
+                    </CardTitle>
+                    <CardDescription className="dark:text-slate-500">
                       Information about your company's innovation
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <FormField
                         control={form.control}
                         name="isInnovative"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormItem className="flex flex-row items-start p-4 space-x-3 space-y-0 border rounded-md">
                             <FormControl>
                               <Checkbox
                                 checked={field.value}
@@ -2080,10 +2087,10 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                               />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                              <FormLabel className="text-base font-medium text-slate-900">
+                              <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                 Innovative Business
                               </FormLabel>
-                              <FormDescription>
+                              <FormDescription className="text-sm text-slate-600 dark:text-slate-400">
                                 The business has an innovative approach,
                                 product, or service
                               </FormDescription>
@@ -2096,7 +2103,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         control={form.control}
                         name="usesDigitalTools"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormItem className="flex flex-row items-start p-4 space-x-3 space-y-0 border rounded-md">
                             <FormControl>
                               <Checkbox
                                 checked={field.value}
@@ -2104,10 +2111,10 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                               />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                              <FormLabel className="text-base font-medium text-slate-900">
+                              <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                 Uses Digital Tools
                               </FormLabel>
-                              <FormDescription>
+                              <FormDescription className="text-sm text-slate-600 dark:text-slate-400">
                                 The business uses digital tools and technologies
                               </FormDescription>
                             </div>
@@ -2122,7 +2129,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="innovationExplanation"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Innovation Explanation
                             </FormLabel>
                             <FormControl>
@@ -2132,7 +2139,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                                 className="border-slate-300 min-h-[100px]"
                               />
                             </FormControl>
-                            <FormDescription>
+                            <FormDescription className="text-sm text-slate-600 dark:text-slate-400">
                               Describe what makes your business innovative and
                               how it differentiates from competitors
                             </FormDescription>
@@ -2145,18 +2152,21 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                     {form.watch("usesDigitalTools") && (
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-base font-medium text-slate-900">
+                          <h3 className="text-base font-medium text-slate-900 dark:text-slate-500">
                             Digital Tools Used
                           </h3>
-                          <Badge variant="outline" className="font-normal">
+                          <Badge
+                            variant="outline"
+                            className="font-normal dark:text-slate-500"
+                          >
                             Select all that apply
                           </Badge>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
                           {digitalToolsOptions.map((option) => (
                             <div
                               key={option}
-                              className="flex items-center space-x-2 rounded-md border p-3"
+                              className="flex items-center p-3 space-x-2 border rounded-md dark:text-slate-500"
                             >
                               <Checkbox
                                 id={`tool-${option}`}
@@ -2185,14 +2195,14 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                             name="otherDigitalTools"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-base font-medium text-slate-900">
+                                <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                   Specify Other Digital Tools
                                 </FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="Enter other digital tools"
                                     {...field}
-                                    className="border-slate-300"
+                                    className="border-slate-300 dark:text-slate-500"
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -2205,23 +2215,23 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
-                    <CardTitle className="text-xl">
+                <Card className="overflow-hidden border-0 shadow-md">
+                  <CardHeader className="border-b bg-gradient-to-r dark:from-slate-800 dark:to-slate-900">
+                    <CardTitle className="text-xl dark:text-slate-500">
                       Social & Environmental Impact
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="dark:text-slate-500">
                       Information about your company's social and environmental
                       impact
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <FormField
                         control={form.control}
                         name="employsVulnerableGroups"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormItem className="flex flex-row items-start p-4 space-x-3 space-y-0 border rounded-md">
                             <FormControl>
                               <Checkbox
                                 checked={field.value}
@@ -2229,10 +2239,10 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                               />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                              <FormLabel className="text-base font-medium text-slate-900">
+                              <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                 Employs Vulnerable Groups
                               </FormLabel>
-                              <FormDescription>
+                              <FormDescription className="text-sm text-slate-600 dark:text-slate-400">
                                 The business employs people from vulnerable or
                                 marginalized groups
                               </FormDescription>
@@ -2245,7 +2255,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         control={form.control}
                         name="addressesEnvironmentalSustainability"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormItem className="flex flex-row items-start p-4 space-x-3 space-y-0 border rounded-md">
                             <FormControl>
                               <Checkbox
                                 checked={field.value}
@@ -2253,10 +2263,10 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                               />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                              <FormLabel className="text-base font-medium text-slate-900">
+                              <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                                 Environmental Sustainability
                               </FormLabel>
-                              <FormDescription>
+                              <FormDescription className="text-sm text-slate-600 dark:text-slate-400">
                                 The business addresses environmental
                                 sustainability in its operations
                               </FormDescription>
@@ -2273,7 +2283,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="impactInitiatives"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Impact Initiatives
                             </FormLabel>
                             <FormControl>
@@ -2283,7 +2293,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                                 className="border-slate-300 min-h-[100px]"
                               />
                             </FormControl>
-                            <FormDescription>
+                            <FormDescription className="text-sm text-slate-600 dark:text-slate-400">
                               Describe your social and environmental impact
                               initiatives in detail
                             </FormDescription>
@@ -2299,7 +2309,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                       control={form.control}
                       name="joinEcosystemPrograms"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormItem className="flex flex-row items-start p-4 space-x-3 space-y-0 border rounded-md">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -2307,10 +2317,10 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                             />
                           </FormControl>
                           <div className="space-y-1 leading-none">
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Ecosystem Programs Interest
                             </FormLabel>
-                            <FormDescription>
+                            <FormDescription className="text-sm text-slate-600 dark:text-slate-400">
                               The business is interested in joining ecosystem
                               support programs
                             </FormDescription>
@@ -2324,14 +2334,14 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                       name="additionalComments"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-base font-medium text-slate-900">
+                          <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                             Additional Comments
                           </FormLabel>
                           <FormControl>
                             <Textarea
                               placeholder="Any additional information you'd like to share"
                               {...field}
-                              className="border-slate-300 min-h-[100px]"
+                              className="border-slate-300 min-h-[100px] dark:text-slate-500"
                             />
                           </FormControl>
                           <FormMessage />
@@ -2346,23 +2356,23 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
             {/* Contact & Social Tab */}
             {activeTab === "contact" && (
               <div className="space-y-8">
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
-                    <CardTitle className="text-xl">
+                <Card className="overflow-hidden border-0 shadow-md">
+                  <CardHeader className="border-b bg-gradient-to-r dark:from-slate-800 dark:to-slate-900">
+                    <CardTitle className="text-xl dark:text-slate-500">
                       Contact Information
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="dark:text-slate-500">
                       Contact details for your company
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <FormField
                         control={form.control}
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Email Address*
                             </FormLabel>
                             <FormControl>
@@ -2382,7 +2392,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Phone Number
                             </FormLabel>
                             <FormControl>
@@ -2402,7 +2412,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="website"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Website
                             </FormLabel>
                             <FormControl>
@@ -2422,7 +2432,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="address"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Address
                             </FormLabel>
                             <FormControl>
@@ -2442,7 +2452,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         name="headOfficeAddress"
                         render={({ field }) => (
                           <FormItem className="md:col-span-2">
-                            <FormLabel className="text-base font-medium text-slate-900">
+                            <FormLabel className="text-base font-medium text-slate-900 dark:text-slate-500">
                               Head Office Address
                             </FormLabel>
                             <FormControl>
@@ -2460,19 +2470,24 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-md overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
-                    <CardTitle className="text-xl">Social Media</CardTitle>
-                    <CardDescription>
+                <Card className="overflow-hidden border-0 shadow-md">
+                  <CardHeader className="border-b bg-gradient-to-r dark:from-slate-800 dark:to-slate-900">
+                    <CardTitle className="text-xl dark:text-slate-500">
+                      Social Media
+                    </CardTitle>
+                    <CardDescription className="dark:text-slate-500">
                       Social media profiles for your company
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
                     <div className="space-y-4">
                       {socialLinks.map((link, index) => (
-                        <div key={index} className="flex items-center gap-4">
+                        <div
+                          key={index}
+                          className="flex items-center gap-4 dark:text-slate-500"
+                        >
                           <div className="flex-1">
-                            <label className="text-sm font-medium text-slate-700 mb-1 block">
+                            <label className="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-500">
                               Platform
                             </label>
                             <select
@@ -2480,7 +2495,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                               onChange={(e) =>
                                 updateSocialLink(index, "name", e.target.value)
                               }
-                              className="w-full rounded-md border border-slate-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                              className="w-full p-2 text-sm border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:text-slate-500"
                             >
                               <option value="">Select platform</option>
                               <option value="LinkedIn">LinkedIn</option>
@@ -2494,7 +2509,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                             </select>
                           </div>
                           <div className="flex-[2]">
-                            <label className="text-sm font-medium text-slate-700 mb-1 block">
+                            <label className="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-500">
                               URL
                             </label>
                             <Input
@@ -2503,7 +2518,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                                 updateSocialLink(index, "link", e.target.value)
                               }
                               placeholder="https://example.com"
-                              className="border-slate-300"
+                              className="border-slate-300 dark:text-slate-500"
                             />
                           </div>
                           <div className="flex items-end pb-1">
@@ -2512,9 +2527,9 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                               variant="ghost"
                               size="sm"
                               onClick={() => removeSocialLink(index)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:text-slate-500"
                             >
-                              <X className="h-4 w-4" />
+                              <X className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
@@ -2525,9 +2540,9 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
                         variant="outline"
                         size="sm"
                         onClick={addSocialLink}
-                        className="mt-2"
+                        className="mt-2 dark:text-slate-500"
                       >
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="w-4 h-4 mr-2" />
                         Add Social Media
                       </Button>
                     </div>
@@ -2537,7 +2552,7 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
             )}
 
             {/* Form Actions */}
-            <div className="flex justify-between items-center pt-6 border-t">
+            <div className="flex items-center justify-between pt-6 border-t dark:text-slate-500">
               <Button
                 type="button"
                 variant="outline"
@@ -2548,12 +2563,12 @@ export default function CompanyEditForm({ company }: CompanyEditFormProps) {
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin dark:text-slate-500" />
                     Saving...
                   </>
                 ) : (
                   <>
-                    <Save className="mr-2 h-4 w-4" />
+                    <Save className="w-4 h-4 mr-2 dark:text-slate-500" />
                     Save Changes
                   </>
                 )}

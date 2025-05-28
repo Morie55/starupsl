@@ -279,7 +279,7 @@ export default function InvestorEditForm({ investor }: any) {
                     )}
                   />
 
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="registrationNumber"
                     render={({ field }) => (
@@ -294,7 +294,7 @@ export default function InvestorEditForm({ investor }: any) {
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
+                  /> */}
                 </div>
 
                 <FormField
@@ -620,35 +620,24 @@ export default function InvestorEditForm({ investor }: any) {
                   name="profileDocuments"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Profile Documents URL</FormLabel>
+                      <FormLabel>Upload Investor Profile PDF</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="https://example.com/documents.pdf"
-                          {...field}
+                          type="file"
+                          accept=".pdf"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              // You can handle the file upload logic here
+                              // For now, we'll store the file name
+                              field.onChange(file.name);
+                            }
+                          }}
+                          className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
                         />
                       </FormControl>
                       <FormDescription>
-                        Link to investor profile documents or brochure
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="businessRegistrationDocuments"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Business Registration Documents URL</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="https://example.com/registration.pdf"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Link to business registration documents
+                        Upload investor profile documents or brochure (PDF only)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

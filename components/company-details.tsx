@@ -1547,12 +1547,12 @@ export default function CompanyDetailsPage({
                       ) : null}
 
                       {company?.pitchDeck ? (
-                        <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50">
+                        <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50 dark:bg-slate-800">
                           <div className="flex items-center">
                             <FileText className="w-5 h-5 mr-3 text-slate-400" />
                             <div>
                               <h3 className="font-medium ">Pitch Deck</h3>
-                              <p className="text-sm text-slate-500">
+                              <p className="text-sm text-slate-500 ">
                                 Company presentation for investors
                               </p>
                             </div>
@@ -1656,7 +1656,6 @@ export default function CompanyDetailsPage({
                               {company?.usesDigitalTools ? "Yes" : "No"}
                             </Badge>
                           </div>
-                          mk
                         </div>
                       </div>
                     </div>
@@ -1731,7 +1730,7 @@ export default function CompanyDetailsPage({
                             Impact Initiatives
                           </h3>
                           <div className="p-4 border rounded-lg bg-slate-50 border-slate-100">
-                            <p className="text-slate-700 dark:text-white">
+                            <p className="text-slate-700 dark:bg-inherit">
                               {company.impactInitiatives}
                             </p>
                           </div>
@@ -1778,7 +1777,7 @@ export default function CompanyDetailsPage({
                         <h3 className="mb-2 text-sm font-medium text-slate-500">
                           Impact Summary
                         </h3>
-                        <div className="space-y-2">
+                        <div className="space-y-2 dark:bg-inherit">
                           {company && company.employsVulnerableGroups && (
                             <div className="flex items-center space-x-2">
                               <Star className="w-4 h-4 text-amber-500" />
@@ -1801,7 +1800,7 @@ export default function CompanyDetailsPage({
                           {company && company.isInnovative && (
                             <div className="flex items-center space-x-2">
                               <Star className="w-4 h-4 text-amber-500" />
-                              <span className="text-slate-700">
+                              <span className="text-slate-700 dark:text-white">
                                 Innovative business approach
                               </span>
                             </div>
@@ -1898,7 +1897,7 @@ export default function CompanyDetailsPage({
                   ) : null}
 
                   {company?.pitchDeck ? (
-                    <div className="flex items-center justify-between p-4 transition-colors border rounded-lg bg-slate-50 hover:bg-slate-100">
+                    <div className="flex items-center justify-between p-4 transition-colors border rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-white">
                       <div className="flex items-center">
                         <div className="p-2 mr-4 bg-white border rounded-lg">
                           <FileText className="w-8 h-8 text-slate-400" />
@@ -1934,7 +1933,7 @@ export default function CompanyDetailsPage({
 
                   {!company?.fundingDocuments && !company?.pitchDeck && (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="p-6 mb-4 rounded-full bg-slate-50">
+                      <div className="p-6 mb-4 rounded-full bg-slate-50 dark:bg-slate-800">
                         <FileText className="w-16 h-16 text-slate-300" />
                       </div>
                       <h3 className="mb-2 text-xl font-medium ">
@@ -1948,7 +1947,7 @@ export default function CompanyDetailsPage({
                 </div>
               </CardContent>
               {user?.id && company?.userId && user.id === company.userId && (
-                <CardFooter className="p-6 border-t bg-slate-50">
+                <CardFooter className="p-6 border-t bg-slate-50 dark:bg-slate-800">
                   <div className="w-full">
                     <h3 className="mb-2 font-medium">
                       Upload Company Documents
@@ -2123,7 +2122,7 @@ export default function CompanyDetailsPage({
                           <input
                             id="name"
                             type="text"
-                            className="w-full p-2 border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                            className="w-full p-2 border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:bg-slate-800 dark:text-white"
                             placeholder="Enter your name"
                           />
                         </div>
@@ -2137,7 +2136,7 @@ export default function CompanyDetailsPage({
                           <input
                             id="email"
                             type="email"
-                            className="w-full p-2 border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                            className="w-full p-2 border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:bg-slate-800 dark:text-white"
                             placeholder="Enter your email"
                           />
                         </div>
@@ -2152,7 +2151,7 @@ export default function CompanyDetailsPage({
                         <input
                           id="subject"
                           type="text"
-                          className="w-full p-2 border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                          className="w-full p-2 border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:bg-slate-800 dark:text-white"
                           placeholder="Enter message subject"
                         />
                       </div>
@@ -2166,13 +2165,13 @@ export default function CompanyDetailsPage({
                         <textarea
                           id="message"
                           rows={5}
-                          className="w-full p-2 border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                          className="w-full p-2 border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:bg-slate-800 dark:text-white"
                           placeholder="Enter your message"
                         ></textarea>
                       </div>
                     </form>
                   </CardContent>
-                  <CardFooter className="p-6 border-t bg-slate-50">
+                  <CardFooter className="p-6 border-t bg-slate-50 dark:bg-slate-800">
                     <Button className="w-full md:w-auto">Send Message</Button>
                   </CardFooter>
                 </Card>
@@ -2271,7 +2270,7 @@ export default function CompanyDetailsPage({
                 )}
               </CardContent>
               {user?.id === company?.userId && (
-                <CardFooter className="p-6 border-t bg-slate-50">
+                <CardFooter className="p-6 border-t bg-slate-50 dark:bg-slate-800">
                   <div className="w-full">
                     <h3 className="mb-2 font-medium">
                       Record a New Funding Round
@@ -2280,9 +2279,11 @@ export default function CompanyDetailsPage({
                       Keep track of your investment history and showcase your
                       growth to potential investors.
                     </p>
-                    <Button variant="outline" className="w-full">
-                      Add Funding Round
-                    </Button>
+                    <Link href="/round" className="w-full">
+                      <Button variant="outline" className="w-full">
+                        Add Funding Round
+                      </Button>
+                    </Link>
                   </div>
                 </CardFooter>
               )}
